@@ -8,6 +8,7 @@ let reactorState = {
   containment: 30,
   hullIntegrity: 100,
   survivalTime: 0,
+  isOverdrive: false, // Add this here so it's part of the state broadcast
   elapsedTime: 0, // Track time from shift start
   isActive: false,
   isPaused: false, // Pause state
@@ -62,13 +63,9 @@ let callbacks = {
 let isOverdrive = false;
 
 export function toggleOverdrive(active) {
-  isOverdrive = active;
-  if (active) {
-    logSignificantEvent("OVERDRIVE: OUTPUT SPIKE");
-    playHazardSound(); // Use an existing sound for now
-  } else {
-    logSignificantEvent("OVERDRIVE: NORMALIZING");
-  }
+  reactorState.isOverdrive = active; // Update the internal state
+  logSignificantEvent(active ? "OVERDRIVE: ACTIVE" : "OVERDRIVE: OFFLINE");
+  triggerUpdate(); // Manually push the update to the UI
 }
 // --- Audio Event Hooks (Mock) ---
 export function playHazardSound() {

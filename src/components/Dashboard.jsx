@@ -558,3 +558,14 @@ function ControlSlider({ label, value, onChange, currentValue, driftMultiplier, 
     </div>
   );
 }
+<div className="flex justify-between w-full max-w-md px-4 py-2 border-t border-b border-emerald-500/20 bg-black/20 mb-4">
+  <div className="text-[10px] text-cyan-400">
+    <span className="opacity-50">SYNC:</span> {state.isOverdrive ? 'Bypassed' : 'Encrypted'}
+  </div>
+  <div className="text-[10px] text-orange-400">
+    <span className="opacity-50">LOAD:</span> {Math.round(avgDanger * (state.isOverdrive ? 1.5 : 1))}%
+  </div>
+  <div className="text-[10px] text-purple-400">
+    <span className="opacity-50">DB:</span> CONNECTED
+  </div>
+</div>
