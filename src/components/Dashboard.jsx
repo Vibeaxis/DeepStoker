@@ -23,8 +23,8 @@ const SHIFT_DURATION = 300; // 5 minutes in seconds
 
 const REACTOR_CORE_STYLES = `
   .reactor-core {
-    width: 22vh !important; 
-    height: 22vh !important;
+    width: 30vh !important; 
+  height: 30vh !important;
     border-radius: 50%;
     position: relative;
     z-index: 20;
@@ -336,17 +336,34 @@ export default function Dashboard({ career, onShiftEnd }) {
             </div>
           </div>
         </div>
-        {/* HUD Decorative Elements */}
-<div className="absolute top-24 left-10 hidden lg:block opacity-30 pointer-events-none">
-  <div className="text-[10px] text-cyan-400 font-mono mb-1">ACOUSTIC PING: ACTIVE</div>
-  <div className="text-[10px] text-emerald-400 font-mono mb-1">EXT_PRESSURE: 40.2 MPa</div>
-  <div className="text-[10px] text-blue-400 font-mono">TRENCH_COORDS: 34.22 / 11.08</div>
+{/* HUD Decorative Elements - Fleshed Out Version */}
+<div className="absolute top-24 left-4 hidden lg:block z-30 pointer-events-none">
+  <div className="bg-black/40 backdrop-blur-sm border-l-2 border-emerald-500/50 p-2 space-y-1">
+    <div className="text-[10px] text-cyan-400 font-mono flex justify-between gap-4">
+      <span className="opacity-50">ACOUSTIC PING:</span> 
+      <span className="animate-pulse">ACTIVE</span>
+    </div>
+    <div className="text-[10px] text-emerald-400 font-mono flex justify-between">
+      <span className="opacity-50">EXT_PRESS:</span> 40.2 MPa
+    </div>
+    <div className="text-[10px] text-blue-400 font-mono flex justify-between">
+      <span className="opacity-50">COORDS:</span> 34.22 / 11.08
+    </div>
+  </div>
 </div>
 
-<div className="absolute top-24 right-10 hidden lg:block opacity-30 pointer-events-none text-right">
-  <div className="text-[10px] text-emerald-400 font-mono mb-1">O2_LEVEL: 98%</div>
-  <div className="text-[10px] text-orange-400 font-mono mb-1">RADIATION: LOW</div>
-  <div className="text-[10px] text-purple-400 font-mono">NEURAL_LINK: STABLE</div>
+<div className="absolute top-24 right-4 hidden lg:block z-30 pointer-events-none text-right">
+  <div className="bg-black/40 backdrop-blur-sm border-r-2 border-orange-500/50 p-2 space-y-1">
+    <div className="text-[10px] text-emerald-400 font-mono flex justify-between gap-4">
+      <span className="opacity-50">O2_LEVEL:</span> 98%
+    </div>
+    <div className="text-[10px] text-orange-400 font-mono flex justify-between">
+      <span className="opacity-50">RADIATION:</span> LOW
+    </div>
+    <div className="text-[10px] text-purple-400 font-mono flex justify-between">
+      <span className="opacity-50">LINK:</span> STABLE
+    </div>
+  </div>
 </div>
         {/* === REACTOR ZONE (Flex-1, Centered) === */}
         <div className="flex-1 w-full relative z-20 flex flex-col items-center justify-center p-2">
