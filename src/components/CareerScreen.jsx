@@ -82,11 +82,13 @@ export default function CareerScreen({ career, onStartShift, onCareerUpdate }) {
         {showLeaderboard && <NetworkLeaderboard onClose={() => setShowLeaderboard(false)} />}
       </AnimatePresence>
       
-      <div className="min-h-screen p-6"
-        style={{
-          background: 'linear-gradient(135deg, #0a1f1a 0%, #0a5f7f 100%)',
-          fontFamily: "'Space Mono', monospace"
-        }}>
+     // To this (Remove min-h-screen and use flex with scrolling):
+<div className="w-full overflow-y-auto px-4 py-8 md:px-8"
+  style={{
+    background: 'linear-gradient(135deg, #0a1f1a 0%, #0a5f7f 100%)',
+    fontFamily: "'Space Mono', monospace",
+    minHeight: '100vh' // Ensures background covers everything
+  }}>
         
         <div className="absolute inset-0 opacity-20">
           <img 

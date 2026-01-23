@@ -117,19 +117,17 @@ body {
   background: rgba(16, 185, 129, 0.4);
   border-radius: 2px;
 }
-/* Kill the phantom scrollbar caused by jitter/shake */
-html, body {
+/* Only lock the overflow for the actual game dashboard */
+.h-screen.overflow-hidden {
   overflow: hidden !important;
-  height: 100vh;
+  position: fixed;
   width: 100vw;
-  margin: 0;
-  padding: 0;
-  position: fixed; /* Prevents mobile "pull-to-refresh" from breaking the UI */
-  touch-action: none; /* Helps make the sliders feel more responsive on mobile */
+  height: 100vh;
 }
 
-#root {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
+/* Allow the career screen and other pages to scroll naturally */
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a1f1a; /* Match your game background */
 }
