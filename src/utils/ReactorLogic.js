@@ -8,7 +8,6 @@ let reactorState = {
   containment: 30,
   hullIntegrity: 100,
   survivalTime: 0,
-  isOverdrive: false, // Add this here so it's part of the state broadcast
   elapsedTime: 0, // Track time from shift start
   isActive: false,
   isPaused: false, // Pause state
@@ -60,13 +59,7 @@ let callbacks = {
   onUpdate: null,
   onCritical: null
 };
-let isOverdrive = false;
 
-export function toggleOverdrive(active) {
-  reactorState.isOverdrive = active; // Update the internal state
-  logSignificantEvent(active ? "OVERDRIVE: ACTIVE" : "OVERDRIVE: OFFLINE");
-  triggerUpdate(); // Manually push the update to the UI
-}
 // --- Audio Event Hooks (Mock) ---
 export function playHazardSound() {
   console.log("AUDIO: Hazard sound triggered");
@@ -488,12 +481,7 @@ export function updateReactor(deltaTime) {
   let baseTempDrift = 0.8 * timeMultiplier * rankMultiplier;
   let basePressDrift = 0.7 * timeMultiplier * rankMultiplier;
   let baseContDrift = 0.6 * timeMultiplier * rankMultiplier;
-  // Add this:
-if (isOverdrive) {
-  baseTempDrift *= 1.4; // 40% more dangerous drift
-  basePressDrift *= 1.4;
-  baseContDrift *= 1.4;
-}
+  
   if (reactorState.upgrades.includes('Super-Coolant')) baseTempDrift *= 0.8;
   if (reactorState.upgrades.includes('Hardened Seals')) basePressDrift *= 0.8;
   if (reactorState.upgrades.includes('Magnetics Stabilizer')) baseContDrift *= 0.8;
@@ -602,14 +590,9 @@ export function calculateDepthCredits() {
   };
   const rankBonus = rankBonuses[reactorState.rank] || 1.0;
   const survivalBonus = Math.floor(reactorState.survivalTime / 10);
- 
-  // Inside calculateDepthCredits
-let totalCredits = Math.floor((baseCredits * multiplier * rankBonus) + survivalBonus);
-
-// Add this:
-if (isOverdrive) {
-  totalCredits = Math.round(totalCredits * 1.5); // 50% more credits
-}
+  
+  const totalCredits = Math.floor((baseCredits * multiplier * rankBonus) + survivalBonus);
+  
   return {
     baseCredits,
     multiplier,
