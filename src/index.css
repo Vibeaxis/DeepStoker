@@ -131,3 +131,12 @@ body {
   padding: 0;
   background: #0a1f1a; /* Match your game background */
 }
+.steam-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  mask-image: radial-gradient(circle, transparent 10%, black 100%);
+  z-index: 45;
+  pointer-events: auto;
+}

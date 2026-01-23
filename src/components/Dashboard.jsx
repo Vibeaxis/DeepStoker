@@ -248,7 +248,26 @@ export default function Dashboard({ career, onShiftEnd }) {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+// Inside your Dashboard component
+const [fogLevel, setFogLevel] = useState(0); // 0 to 100
 
+useEffect(() => {
+  if (state.isPaused) return;
+
+  const fogInterval = setInterval(() => {
+    setFogLevel(prev => Math.min(prev + 1, 100)); // Slowly fogs up
+  }, 1500); // Adjust speed: lower is faster fog
+
+  return () => clearInterval(fogInterval);
+}, [state.isPaused]);
+
+const handleWipe = () => {
+  if (fogLevel > 10) {
+    setFogLevel(0);
+    // Add a satisfying wipe sound here if you have one
+    logSignificantEvent("VIEWPORT CLEARED");
+  }
+};
   const shakeIntensity = isHullCritical ? (1 - distortionReduction) : 0;
   const shakeAnimation = isHullCritical && shakeIntensity > 0 && !state.isPaused ? {
     x: [0, -2 * shakeIntensity, 2 * shakeIntensity, 0],
@@ -365,6 +384,30 @@ export default function Dashboard({ career, onShiftEnd }) {
     </div>
   </div>
 </div>
+<AnimatePresence>
+  {fogLevel > 5 && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: fogLevel / 100 }}
+      exit={{ opacity: 0 }}
+      onClick={handleWipe}
+      className="steam-overlay"
+      style={{
+        cursor: 'pointer',
+        backdropFilter: `blur(${fogLevel / 10}px)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      {fogLevel > 60 && (
+        <div className="text-white/20 font-orbitron text-xs animate-pulse">
+          WIPE VIEWPORT
+        </div>
+      )}
+    </motion.div>
+  )}
+</AnimatePresence>
         {/* === REACTOR ZONE (Flex-1, Centered) === */}
         <div className="flex-1 w-full relative z-20 flex flex-col items-center justify-center p-2">
           
