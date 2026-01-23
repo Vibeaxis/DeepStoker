@@ -516,7 +516,8 @@ function ControlSlider({ label, value, onChange, currentValue, driftMultiplier, 
   const driftRatePct = Math.round(driftMultiplier * 100);
   const driftStatusText = driftMultiplier > 1.05 ? "ACCELERATING" : (driftMultiplier > 1.0 ? "STABILIZING" : "NOMINAL");
   const driftColor = driftMultiplier > 1.05 ? "text-orange-400" : (driftMultiplier > 1.0 ? "text-yellow-400" : "text-emerald-400");
-  
+  // Inside the Dashboard component, right before the 'return' statement:
+const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
   return (
     <div
       className={`bg-black/60 backdrop-blur-md rounded-lg border transition-colors duration-300 px-3 py-1.5 relative z-50 ${isJammed ? 'border-red-600' : 'border-emerald-500/30'}`}
@@ -558,8 +559,7 @@ function ControlSlider({ label, value, onChange, currentValue, driftMultiplier, 
     </div>
   );
 }
-// Inside the Dashboard component, right before the 'return' statement:
-const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
+
 <div className="flex justify-between w-full max-w-md px-4 py-2 border-t border-b border-emerald-500/20 bg-black/20 mb-4">
   <div className="text-[10px] text-cyan-400">
     <span className="opacity-50">SYNC:</span> {state.isOverdrive ? 'Bypassed' : 'Encrypted'}
