@@ -370,10 +370,14 @@ export default function Dashboard({ career, onShiftEnd }) {
 
               <motion.div
                 className={`reactor-core ${getCoreColor()}`}
-                animate={!state.isPaused ? {
-                  scale: [1, 1.05, 1],
-                  opacity: [0.8, 1, 0.8]
-                } : {}}
+               animate={!state.isPaused ? {
+  scale: avgDanger > 85 ? [1, 1.15, 1] : [1, 1.05, 1], // More violent pulsing at high danger
+  filter: [
+    `drop-shadow(0 0 20px ${getCoreColor()})`,
+    `drop-shadow(0 0 50px ${getCoreColor()})`,
+    `drop-shadow(0 0 20px ${getCoreColor()})`
+  ]
+} : {}}
                 transition={{
                   duration: avgDanger > 85 ? 0.5 : avgDanger > 60 ? 1 : 2,
                   repeat: Infinity,
@@ -415,6 +419,22 @@ export default function Dashboard({ career, onShiftEnd }) {
         
         {/* === CONTROL DOCK (Pinned Bottom, Flex-None) === */}
         <div className={`flex-none w-full bg-black/40 border-t border-emerald-500/30 backdrop-blur-md px-2 pb-6 pt-2 z-50 ${state.hazardState.heavyCurrent && !state.isPaused ? 'animate-jitter' : ''}`}>
+          <div className="flex justify-around mb-2 px-4">
+  <div className="flex flex-col items-center">
+    <span className="text-[8px] text-emerald-500 mb-1">OVERDRIVE</span>
+    <button 
+      onClick={() => /* Add logic to increase drift but boost credits */ {}}
+      className="w-8 h-4 bg-emerald-900/50 rounded-full border border-emerald-500/50 flex items-center px-1"
+    >
+      <div className="w-2 h-2 bg-emerald-400 rounded-full" />
+    </button>
+  </div>
+  <div className="flex flex-col items-center">
+    <span className="text-[8px] text-cyan-500 mb-1">GRID LOAD</span>
+    <div className="text-[10px] text-cyan-400 font-orbitron">88%</div>
+  </div>
+</div>
+          
            <div className="w-full max-w-md mx-auto space-y-1">
              <ControlSlider 
               label="VENT PRESSURE"
