@@ -395,13 +395,11 @@ const handleWipe = () => {
       onClick={handleWipe}
       className="steam-overlay"
       style={{
-        // Use 'none' if fog is low so you can still use sliders
-        pointerEvents: fogLevel > 5 ? 'auto' : 'none', 
-        backdropFilter: `blur(${fogLevel / 5}px)`,
-        // Force it to be white/grey so you can actually see it
-        background: `rgba(255, 255, 255, ${fogLevel / 200})`,
-        zIndex: 45 
-      }}
+  // Only start blurring once fogLevel is above 20
+  backdropFilter: `blur(${fogLevel > 20 ? (fogLevel - 20) / 8 : 0}px)`,
+  opacity: fogLevel / 100,
+  transition: 'backdrop-filter 0.5s ease'
+}}
     >
       {fogLevel > 40 && (
         <div className="text-white font-bold text-lg drop-shadow-lg">
@@ -493,43 +491,30 @@ const handleWipe = () => {
           </div>
         </div>
         
-        {/* === CONTROL DOCK (Pinned Bottom, Flex-None) === */}
-        <div className={`flex-none w-full bg-black/40 border-t border-emerald-500/30 backdrop-blur-md px-2 pb-6 pt-2 z-50 ${state.hazardState.heavyCurrent && !state.isPaused ? 'animate-jitter' : ''}`}>
-          <div className="flex justify-around mb-2 px-4">
-  <div className="flex flex-col items-center">
-    <span className="text-[8px] text-emerald-500 mb-1">OVERDRIVE</span>
-    <button 
-      onClick={() => /* Add logic to increase drift but boost credits */ {}}
-      className="w-8 h-4 bg-emerald-900/50 rounded-full border border-emerald-500/50 flex items-center px-1"
-    >
-      <div className="w-2 h-2 bg-emerald-400 rounded-full" />
-    </button>
-  </div>
-  <div className="flex flex-col items-center">
-    <span className="text-[8px] text-cyan-500 mb-1">GRID LOAD</span>
-    <div className="text-[10px] text-cyan-400 font-orbitron">88%</div>
-  </div>
-</div>
-          {/* Manual Viewport Clear Button */}
-<div className="flex flex-col items-center mb-4 z-50">
-  <div className="flex items-center gap-4 bg-black/40 p-2 border border-blue-500/30 rounded-lg">
-    <div className="flex flex-col">
-      <span className="text-[8px] text-blue-400 font-orbitron">VIEWPORT FOG</span>
-      <div className="w-20 h-1.5 bg-blue-950 rounded-full mt-1 overflow-hidden">
-        <div 
-          className="h-full bg-blue-400 transition-all duration-500" 
-          style={{ width: `${fogLevel}%` }} 
-        />
+ <div className="flex flex-col items-center mb-6 z-50">
+  <div className="bg-black/60 backdrop-blur-md p-3 border-2 border-blue-500/30 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+    <div className="flex items-center gap-6">
+      <div className="space-y-1">
+        <div className="text-[10px] text-blue-400 font-black tracking-widest uppercase">Viewport Clarity</div>
+        <div className="w-32 h-2 bg-blue-950 rounded-full border border-blue-500/20 overflow-hidden">
+          <motion.div 
+            className="h-full bg-blue-400" 
+            animate={{ width: `${fogLevel}%` }}
+            style={{ boxShadow: '0 0 10px #60a5fa' }}
+          />
+        </div>
       </div>
+      
+      <Button
+        onClick={handleWipe}
+        // Let them wipe at any time, but make it pulse when it's critical
+        className={`h-12 px-6 font-black text-xs transition-all ${
+          fogLevel > 70 ? 'bg-blue-600 animate-pulse' : 'bg-zinc-800 border border-blue-500/50'
+        }`}
+      >
+        {fogLevel > 70 ? 'EMERGENCY WIPE' : 'CLEAR GLASS'}
+      </Button>
     </div>
-    
-    <Button
-      onClick={handleWipe}
-      disabled={fogLevel < 10}
-      className={`h-10 px-4 font-bold text-[10px] ${fogLevel > 60 ? 'animate-pulse bg-blue-600' : 'bg-zinc-800'}`}
-    >
-      {fogLevel > 80 ? '!!! WIPE VIEWPORT !!!' : 'ACTIVATE WIPER'}
-    </Button>
   </div>
 </div>
            <div className="w-full max-w-md mx-auto space-y-1">

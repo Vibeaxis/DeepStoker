@@ -134,9 +134,10 @@ body {
 .steam-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  /* This is key: it lets you click through the fog to hit the button */
+  /* Make it look like real steam, not a grey wall */
+  background: radial-gradient(circle at center, transparent 20%, rgba(255, 255, 255, 0.15) 100%);
+  backdrop-filter: blur(8px);
+  /* THIS IS THE FIX: This lets clicks pass THROUGH the fog to the button */
   pointer-events: none; 
-  z-index: 40; 
+  z-index: 30; /* Higher than the core, lower than the buttons */
 }
