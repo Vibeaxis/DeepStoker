@@ -59,7 +59,17 @@ let callbacks = {
   onUpdate: null,
   onCritical: null
 };
+let isOverdrive = false;
 
+export function toggleOverdrive(active) {
+  isOverdrive = active;
+  if (active) {
+    logSignificantEvent("OVERDRIVE: OUTPUT SPIKE");
+    playHazardSound(); // Use an existing sound for now
+  } else {
+    logSignificantEvent("OVERDRIVE: NORMALIZING");
+  }
+}
 // --- Audio Event Hooks (Mock) ---
 export function playHazardSound() {
   console.log("AUDIO: Hazard sound triggered");
@@ -519,6 +529,18 @@ export function checkNominalStatus(deltaTime) {
   const isTempNominal = reactorState.temperature >= 40 && reactorState.temperature <= 60;
   const isPressNominal = reactorState.pressure >= 40 && reactorState.pressure <= 60;
   const isContNominal = reactorState.containment >= 40 && reactorState.containment <= 60;
+if (now - lastStatusLogTime > NOMINAL_LOG_INTERVAL) {
+    const flavorLogs = [
+      "STATUS: NOMINAL",
+      "UPDATING GRID LOAD...",
+      "STATION 4: ALL SYSTEMS STEADY",
+      "ATMOSPHERIC SEAL CHECK COMPLETE"
+    ];
+    const message = flavorLogs[Math.floor(Math.random() * flavorLogs.length)];
+    logSignificantEvent(message);
+    lastStatusLogTime = now;
+    return true;
+  }
 
   if (isTempNominal && isPressNominal && isContNominal) {
     const now = Date.now();
@@ -580,7 +602,13 @@ export function calculateDepthCredits() {
   const survivalBonus = Math.floor(reactorState.survivalTime / 10);
   
   const totalCredits = Math.floor((baseCredits * multiplier * rankBonus) + survivalBonus);
-  
+  // Inside calculateDepthCredits
+let totalCredits = Math.floor((baseCredits * multiplier * rankBonus) + survivalBonus);
+
+// Add this:
+if (isOverdrive) {
+  totalCredits = Math.round(totalCredits * 1.5); // 50% more credits
+}
   return {
     baseCredits,
     multiplier,
