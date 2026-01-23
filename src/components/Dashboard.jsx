@@ -384,25 +384,27 @@ const handleWipe = () => {
     </div>
   </div>
 </div>
+{/* Optimized Fog Overlay */}
 <AnimatePresence>
-  {fogLevel > 5 && (
+  {fogLevel > 1 && (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: fogLevel / 100 }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={handleWipe}
       className="steam-overlay"
       style={{
-        cursor: 'pointer',
-        backdropFilter: `blur(${fogLevel / 10}px)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        // Use 'none' if fog is low so you can still use sliders
+        pointerEvents: fogLevel > 5 ? 'auto' : 'none', 
+        backdropFilter: `blur(${fogLevel / 5}px)`,
+        // Force it to be white/grey so you can actually see it
+        background: `rgba(255, 255, 255, ${fogLevel / 200})`,
+        zIndex: 45 
       }}
     >
-      {fogLevel > 60 && (
-        <div className="text-white/20 font-orbitron text-xs animate-pulse">
-          WIPE VIEWPORT
+      {fogLevel > 40 && (
+        <div className="text-white font-bold text-lg drop-shadow-lg">
+          TAP TO WIPE
         </div>
       )}
     </motion.div>
@@ -411,17 +413,19 @@ const handleWipe = () => {
         {/* === REACTOR ZONE (Flex-1, Centered) === */}
         <div className="flex-1 w-full relative z-20 flex flex-col items-center justify-center p-2">
           
-          {/* Logs Overlay (Top-Left Absolute) */}
-          <div className="absolute top-2 left-2 max-w-[200px] pointer-events-none opacity-80 hidden sm:block">
-            <div ref={logContainerRef} className="max-h-32 overflow-hidden flex flex-col-reverse">
-              {state.recentLogs.slice(-3).map((log) => (
-                  <div key={log.id} className="text-[9px] text-emerald-400/80 mb-1 font-mono leading-tight">
-                    <span className="opacity-50 mr-1">{log.timestamp}</span>
-                    {log.message}
-                  </div>
-              ))}
-            </div>
-          </div>
+         {/* Logs Overlay with Background for Readability */}
+<div className="absolute top-2 left-2 max-w-[220px] pointer-events-none z-50 hidden sm:block">
+  <div className="bg-black/60 backdrop-blur-md p-2 border-l border-emerald-500/30">
+    <div ref={logContainerRef} className="max-h-32 overflow-hidden flex flex-col-reverse">
+      {state.recentLogs.slice(-3).map((log) => (
+        <div key={log.id} className="text-[10px] text-emerald-400 font-mono leading-tight mb-1 shadow-sm">
+          <span className="text-emerald-600 mr-1">[{log.timestamp.split(':')[1]}:{log.timestamp.split(':')[2]}]</span>
+          {log.message}
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
 
           {/* Reactor Container */}
           <div className={`relative transition-transform duration-500 ${state.hazardState.heavyCurrent ? 'animate-sway' : ''}`}>

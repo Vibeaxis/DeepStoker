@@ -134,9 +134,12 @@ body {
 .steam-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  mask-image: radial-gradient(circle, transparent 10%, black 100%);
+  /* Add a distinct whitish color so it doesn't just 'darken' the screen */
+  background: rgba(220, 230, 255, 0.15); 
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* Required for some mobile browsers */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 45;
-  pointer-events: auto;
 }
