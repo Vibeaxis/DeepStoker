@@ -255,7 +255,8 @@ export default function Dashboard({ career, onShiftEnd }) {
     y: [0, 1 * shakeIntensity, -1 * shakeIntensity, 0],
     transition: { repeat: Infinity, duration: 0.2 }
   } : {};
-
+// Inside the Dashboard component, right before the 'return' statement:
+const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
   return (
     <>
       <Helmet>
@@ -516,8 +517,7 @@ function ControlSlider({ label, value, onChange, currentValue, driftMultiplier, 
   const driftRatePct = Math.round(driftMultiplier * 100);
   const driftStatusText = driftMultiplier > 1.05 ? "ACCELERATING" : (driftMultiplier > 1.0 ? "STABILIZING" : "NOMINAL");
   const driftColor = driftMultiplier > 1.05 ? "text-orange-400" : (driftMultiplier > 1.0 ? "text-yellow-400" : "text-emerald-400");
-  // Inside the Dashboard component, right before the 'return' statement:
-const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
+
   return (
     <div
       className={`bg-black/60 backdrop-blur-md rounded-lg border transition-colors duration-300 px-3 py-1.5 relative z-50 ${isJammed ? 'border-red-600' : 'border-emerald-500/30'}`}
