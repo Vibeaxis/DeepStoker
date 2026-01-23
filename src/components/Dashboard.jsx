@@ -558,6 +558,8 @@ function ControlSlider({ label, value, onChange, currentValue, driftMultiplier, 
     </div>
   );
 }
+// Inside the Dashboard component, right before the 'return' statement:
+const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
 <div className="flex justify-between w-full max-w-md px-4 py-2 border-t border-b border-emerald-500/20 bg-black/20 mb-4">
   <div className="text-[10px] text-cyan-400">
     <span className="opacity-50">SYNC:</span> {state.isOverdrive ? 'Bypassed' : 'Encrypted'}
