@@ -255,8 +255,7 @@ export default function Dashboard({ career, onShiftEnd }) {
     y: [0, 1 * shakeIntensity, -1 * shakeIntensity, 0],
     transition: { repeat: Infinity, duration: 0.2 }
   } : {};
-// Inside the Dashboard component, right before the 'return' statement:
-const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
+
   return (
     <>
       <Helmet>
