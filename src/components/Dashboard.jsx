@@ -491,7 +491,9 @@ const handleWipe = () => {
           </div>
         </div>
         
- <div className="flex flex-col items-center mb-6 z-50">
+    {/* === CONTROL DOCK === */}
+<div className={`flex-none w-full bg-black/40 border-t border-emerald-500/30 backdrop-blur-md px-2 pb-6 pt-2 z-50`}>
+        <div className="flex flex-col items-center mb-6 z-50">
   <div className="bg-black/60 backdrop-blur-md p-3 border-2 border-blue-500/30 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.2)]">
     <div className="flex items-center gap-6">
       <div className="space-y-1">
