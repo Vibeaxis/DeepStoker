@@ -519,18 +519,6 @@ export function checkNominalStatus(deltaTime) {
   const isTempNominal = reactorState.temperature >= 40 && reactorState.temperature <= 60;
   const isPressNominal = reactorState.pressure >= 40 && reactorState.pressure <= 60;
   const isContNominal = reactorState.containment >= 40 && reactorState.containment <= 60;
-if (now - lastStatusLogTime > NOMINAL_LOG_INTERVAL) {
-    const flavorLogs = [
-      "STATUS: NOMINAL",
-      "UPDATING GRID LOAD...",
-      "STATION 4: ALL SYSTEMS STEADY",
-      "ATMOSPHERIC SEAL CHECK COMPLETE"
-    ];
-    const message = flavorLogs[Math.floor(Math.random() * flavorLogs.length)];
-    logSignificantEvent(message);
-    lastStatusLogTime = now;
-    return true;
-  }
 
   if (isTempNominal && isPressNominal && isContNominal) {
     const now = Date.now();
