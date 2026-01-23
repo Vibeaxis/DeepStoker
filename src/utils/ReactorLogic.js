@@ -600,8 +600,7 @@ export function calculateDepthCredits() {
   };
   const rankBonus = rankBonuses[reactorState.rank] || 1.0;
   const survivalBonus = Math.floor(reactorState.survivalTime / 10);
-  
-  const totalCredits = Math.floor((baseCredits * multiplier * rankBonus) + survivalBonus);
+ 
   // Inside calculateDepthCredits
 let totalCredits = Math.floor((baseCredits * multiplier * rankBonus) + survivalBonus);
 
