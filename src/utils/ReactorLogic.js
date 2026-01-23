@@ -491,7 +491,12 @@ export function updateReactor(deltaTime) {
   let baseTempDrift = 0.8 * timeMultiplier * rankMultiplier;
   let basePressDrift = 0.7 * timeMultiplier * rankMultiplier;
   let baseContDrift = 0.6 * timeMultiplier * rankMultiplier;
-  
+  // Add this:
+if (isOverdrive) {
+  baseTempDrift *= 1.4; // 40% more dangerous drift
+  basePressDrift *= 1.4;
+  baseContDrift *= 1.4;
+}
   if (reactorState.upgrades.includes('Super-Coolant')) baseTempDrift *= 0.8;
   if (reactorState.upgrades.includes('Hardened Seals')) basePressDrift *= 0.8;
   if (reactorState.upgrades.includes('Magnetics Stabilizer')) baseContDrift *= 0.8;
