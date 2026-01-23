@@ -18,6 +18,7 @@ import {
   playLowFrequencyAlarm,
   togglePause
 } from '@/utils/ReactorLogic';
+import { Button } from '@/components/ui/button';
 
 const SHIFT_DURATION = 300; // 5 minutes in seconds
 
