@@ -336,7 +336,18 @@ export default function Dashboard({ career, onShiftEnd }) {
             </div>
           </div>
         </div>
-        
+        {/* HUD Decorative Elements */}
+<div className="absolute top-24 left-10 hidden lg:block opacity-30 pointer-events-none">
+  <div className="text-[10px] text-cyan-400 font-mono mb-1">ACOUSTIC PING: ACTIVE</div>
+  <div className="text-[10px] text-emerald-400 font-mono mb-1">EXT_PRESSURE: 40.2 MPa</div>
+  <div className="text-[10px] text-blue-400 font-mono">TRENCH_COORDS: 34.22 / 11.08</div>
+</div>
+
+<div className="absolute top-24 right-10 hidden lg:block opacity-30 pointer-events-none text-right">
+  <div className="text-[10px] text-emerald-400 font-mono mb-1">O2_LEVEL: 98%</div>
+  <div className="text-[10px] text-orange-400 font-mono mb-1">RADIATION: LOW</div>
+  <div className="text-[10px] text-purple-400 font-mono">NEURAL_LINK: STABLE</div>
+</div>
         {/* === REACTOR ZONE (Flex-1, Centered) === */}
         <div className="flex-1 w-full relative z-20 flex flex-col items-center justify-center p-2">
           
