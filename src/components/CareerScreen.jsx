@@ -81,8 +81,7 @@ export default function CareerScreen({ career, onStartShift, onCareerUpdate }) {
       <AnimatePresence>
         {showLeaderboard && <NetworkLeaderboard onClose={() => setShowLeaderboard(false)} />}
       </AnimatePresence>
-      
-     // To this (Remove min-h-screen and use flex with scrolling):
+  
 <div className="w-full overflow-y-auto px-4 py-8 md:px-8"
   style={{
     background: 'linear-gradient(135deg, #0a1f1a 0%, #0a5f7f 100%)',
@@ -201,7 +200,7 @@ export default function CareerScreen({ career, onStartShift, onCareerUpdate }) {
                 </div>
             </div>
             
-            <div className="grid grid-cols-4 gap-4">
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
               <div className="bg-emerald-950/50 rounded-lg p-4 border border-emerald-500/30">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-emerald-400" />
@@ -255,7 +254,7 @@ export default function CareerScreen({ career, onStartShift, onCareerUpdate }) {
               EQUIPMENT UPGRADES
             </h2>
             
-            <div className="grid grid-cols-3 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {Object.entries(upgrades).map(([name, upgrade], index) => {
                 const status = getUpgradeStatus(career, name);
                 
