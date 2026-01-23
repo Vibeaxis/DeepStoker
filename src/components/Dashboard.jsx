@@ -509,7 +509,28 @@ const handleWipe = () => {
     <div className="text-[10px] text-cyan-400 font-orbitron">88%</div>
   </div>
 </div>
-          
+          {/* Manual Viewport Clear Button */}
+<div className="flex flex-col items-center mb-4 z-50">
+  <div className="flex items-center gap-4 bg-black/40 p-2 border border-blue-500/30 rounded-lg">
+    <div className="flex flex-col">
+      <span className="text-[8px] text-blue-400 font-orbitron">VIEWPORT FOG</span>
+      <div className="w-20 h-1.5 bg-blue-950 rounded-full mt-1 overflow-hidden">
+        <div 
+          className="h-full bg-blue-400 transition-all duration-500" 
+          style={{ width: `${fogLevel}%` }} 
+        />
+      </div>
+    </div>
+    
+    <Button
+      onClick={handleWipe}
+      disabled={fogLevel < 10}
+      className={`h-10 px-4 font-bold text-[10px] ${fogLevel > 60 ? 'animate-pulse bg-blue-600' : 'bg-zinc-800'}`}
+    >
+      {fogLevel > 80 ? '!!! WIPE VIEWPORT !!!' : 'ACTIVATE WIPER'}
+    </Button>
+  </div>
+</div>
            <div className="w-full max-w-md mx-auto space-y-1">
              <ControlSlider 
               label="VENT PRESSURE"

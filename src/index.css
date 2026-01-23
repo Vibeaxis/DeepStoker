@@ -134,12 +134,9 @@ body {
 .steam-overlay {
   position: absolute;
   inset: 0;
-  /* Add a distinct whitish color so it doesn't just 'darken' the screen */
-  background: rgba(220, 230, 255, 0.15); 
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px); /* Required for some mobile browsers */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 45;
+  /* This is key: it lets you click through the fog to hit the button */
+  pointer-events: none; 
+  z-index: 40; 
 }
