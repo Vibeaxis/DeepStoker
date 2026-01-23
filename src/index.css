@@ -1,0 +1,119 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Space Mono', monospace;
+  background: #0a1f1a;
+  color: #fff;
+  overflow-x: hidden; 
+  touch-action: pan-y; /* Optimize touch */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Hazard Animations */
+
+@keyframes screenFlash {
+  0% { opacity: 0; background-color: transparent; }
+  10% { opacity: 0.8; background-color: rgba(200, 230, 255, 0.8); }
+  20% { opacity: 0.2; background-color: rgba(0, 100, 255, 0.3); }
+  30% { opacity: 0.6; background-color: rgba(255, 255, 255, 0.6); }
+  40% { opacity: 0; background-color: transparent; }
+  100% { opacity: 0; background-color: transparent; }
+}
+
+@keyframes sway {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(5px, 5px) rotate(1deg); }
+  50% { transform: translate(0, 10px) rotate(0deg); }
+  75% { transform: translate(-5px, 5px) rotate(-1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes sliderJitter {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(-3px); }
+  20% { transform: translateX(3px); }
+  30% { transform: translateX(-2px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-4px); }
+  60% { transform: translateX(2px); }
+  70% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+  90% { transform: translateX(-1px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes entityPass {
+  0% { transform: translateX(-100%) scale(0.8); opacity: 0; }
+  20% { opacity: 0.4; }
+  50% { transform: translateX(0) scale(1.2); opacity: 0.8; }
+  80% { opacity: 0.4; }
+  100% { transform: translateX(100%) scale(0.8); opacity: 0; }
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); text-shadow: none; }
+  20% { transform: translate(-2px, 2px); text-shadow: 2px 0 #ff00c1, -2px 0 #00fff9; }
+  40% { transform: translate(-2px, -2px); text-shadow: 3px 0 #ff00c1, -3px 0 #00fff9; }
+  60% { transform: translate(2px, 2px); text-shadow: 2px 0 #ff00c1, -2px 0 #00fff9; }
+  80% { transform: translate(2px, -2px); text-shadow: 3px 0 #ff00c1, -3px 0 #00fff9; }
+  100% { transform: translate(0); text-shadow: none; }
+}
+
+@keyframes penaltyFlash {
+  0% { opacity: 1; filter: drop-shadow(0 0 0 transparent); }
+  50% { opacity: 1; filter: drop-shadow(0 0 10px #ef4444); }
+  100% { opacity: 1; filter: drop-shadow(0 0 0 transparent); }
+}
+
+/* Classes */
+
+.animate-flash {
+  animation: screenFlash 1.5s ease-out forwards;
+}
+
+.animate-sway {
+  animation: sway 5s ease-in-out infinite;
+}
+
+.animate-jitter {
+  animation: sliderJitter 0.2s linear infinite;
+}
+
+.animate-entity {
+  animation: entityPass 6s linear forwards;
+}
+
+.animate-glitch {
+  animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
+.sweet-spot-glow span {
+  box-shadow: 0 0 15px #00ffff;
+  background-color: #00ffff !important;
+}
+
+.penalty-flash span {
+  background-color: #ef4444 !important;
+  box-shadow: 0 0 20px #ef4444;
+  transition: all 0.1s ease-out;
+}
+
+/* Custom Scrollbar for Logs */
+.log-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.log-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.log-scroll::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.4);
+  border-radius: 2px;
+}
