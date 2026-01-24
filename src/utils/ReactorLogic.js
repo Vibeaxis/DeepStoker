@@ -2,6 +2,35 @@
 // Core reactor simulation engine
 import { RANKS } from './CareerProfile';
 
+// Helper for the System Log feed
+function logSignificantEvent(message) {
+  const timestamp = new Date().toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' });
+  recentLogs.unshift({ id: Date.now(), timestamp, message });
+  if (recentLogs.length > 10) recentLogs.pop();
+}
+
+// The Success Kill-Switch
+function handleShiftSuccess() {
+  if (reactorState.intervalId) {
+    clearInterval(reactorState.intervalId);
+    reactorState.intervalId = null;
+  }
+  reactorState.isActive = false;
+
+  // Now this will work because the helper is defined above
+  logSignificantEvent("REACTOR STABILIZED: SHIFT COMPLETE");
+
+  if (callbacks.onUpdate) {
+    callbacks.onUpdate({ 
+      ...reactorState, 
+      hazardState, 
+      isComplete: true, 
+      success: true 
+    });
+  }
+}
+
+
 let reactorState = {
   temperature: 30,
   pressure: 30,
@@ -386,30 +415,6 @@ export function updateControlAlignment(controlType, isAligned) {
 
 
 
-
-function handleShiftSuccess() {
-  // 1. Kill the timer immediately
-  if (reactorState.intervalId) {
-    clearInterval(reactorState.intervalId);
-    reactorState.intervalId = null;
-  }
-
-  // 2. Mark the shift as inactive
-  reactorState.isActive = false;
-
-  // 3. Log it for the event feed
-  logSignificantEvent("REACTOR STABILIZED: SHIFT COMPLETE");
-
-  // 4. Tell the App.jsx that we won
-  if (callbacks.onUpdate) {
-    callbacks.onUpdate({ 
-      ...reactorState, 
-      hazardState, 
-      isComplete: true, // This flag tells ShiftEnd to trigger
-      success: true 
-    });
-  }
-}
 // --- Updated Main Loop Logic ---
 
 export function initializeReactor(rank = 'Novice', upgrades = [], initialHullIntegrity = 100, config = {}) {
