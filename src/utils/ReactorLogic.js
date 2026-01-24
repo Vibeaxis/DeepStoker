@@ -173,34 +173,44 @@ export function startReactorLoop(onUpdate, onCritical) {
 }
 
 export function updateReactor(deltaTime) {
-  if (!reactorState.isActive || reactorState.isPaused) return reactorState;
-
-  reactorState.survivalTime += deltaTime;
-  reactorState.elapsedTime += deltaTime;
-
-  // --- WIN CONDITION CHECK ---
-  if (reactorState.elapsedTime >= reactorState.shiftDuration) {
-    handleShiftSuccess();
+  if (!reactorState.isActive) return reactorState;
+  
+  if (reactorState.isPaused) {
     return reactorState;
   }
-
+  
+  reactorState.survivalTime += deltaTime;
+  reactorState.elapsedTime += deltaTime;
+  
   updateDriftRates(deltaTime);
   
   const timeMultiplier = 1 + (reactorState.survivalTime / 300);
-  const rankMultipliers = { 'Novice': 1.0, 'Technician': 1.2, 'Engineer': 1.4, 'Master': 1.6, 'Overseer': 1.8, 'Abyssal Architect': 2.0 };
+  
+  const rankMultipliers = { 
+    'Novice': 1.0, 
+    'Technician': 1.2, 
+    'Engineer': 1.4, 
+    'Master': 1.6,
+    'Overseer': 1.8,
+    'Abyssal Architect': 2.0 
+  };
   const rankMultiplier = rankMultipliers[reactorState.rank] || 1.0;
   
-  let bT = 0.8 * timeMultiplier * rankMultiplier * driftMultipliers.temperature;
-  let bP = 0.7 * timeMultiplier * rankMultiplier * driftMultipliers.pressure;
-  let bC = 0.6 * timeMultiplier * rankMultiplier * driftMultipliers.containment;
+  let baseTempDrift = 0.8 * timeMultiplier * rankMultiplier;
+  let basePressDrift = 0.7 * timeMultiplier * rankMultiplier;
+  let baseContDrift = 0.6 * timeMultiplier * rankMultiplier;
   
-  if (reactorState.upgrades.includes('Super-Coolant')) bT *= 0.8;
-  if (reactorState.upgrades.includes('Hardened Seals')) bP *= 0.8;
-  if (reactorState.upgrades.includes('Magnetics Stabilizer')) bC *= 0.8;
+  if (reactorState.upgrades.includes('Super-Coolant')) baseTempDrift *= 0.8;
+  if (reactorState.upgrades.includes('Hardened Seals')) basePressDrift *= 0.8;
+  if (reactorState.upgrades.includes('Magnetics Stabilizer')) baseContDrift *= 0.8;
   
-  reactorState.temperature = Math.min(100, reactorState.temperature + bT);
-  reactorState.pressure = Math.min(100, reactorState.pressure + bP);
-  reactorState.containment = Math.min(100, reactorState.containment + bC);
+  const tempDrift = baseTempDrift * driftMultipliers.temperature;
+  const pressureDrift = basePressDrift * driftMultipliers.pressure;
+  const containmentDrift = baseContDrift * driftMultipliers.containment;
+
+  reactorState.temperature = Math.min(100, reactorState.temperature + tempDrift);
+  reactorState.pressure = Math.min(100, reactorState.pressure + pressureDrift);
+  reactorState.containment = Math.min(100, reactorState.containment + containmentDrift);
   
   updateCriticalTimers(deltaTime);
   checkNominalStatus(deltaTime);
@@ -209,16 +219,32 @@ export function updateReactor(deltaTime) {
      if (Math.random() < 0.05) playLowPowerHum(); 
   }
 
+  // --- THE FIX IS HERE ---
   if (reactorState.temperature >= 100 || reactorState.pressure >= 100 || reactorState.containment >= 100) {
-    if (callbacks.onCritical) callbacks.onCritical({ type: 'MELTDOWN' });
+    if (callbacks.onCritical) {
+      // WE MUST SEND THE DATA ALONG WITH THE ERROR
+      callbacks.onCritical({ 
+        type: 'MELTDOWN',
+        finalState: { ...reactorState }, // <--- THIS LINE SAVES THE CRASH
+        survivalTime: reactorState.survivalTime
+      });
+    }
   }
 
   if (reactorState.hullIntegrity <= 0) {
     playImplosionSound();
-    if (callbacks.onCritical) callbacks.onCritical({ type: 'IMPLOSION' });
+    if (callbacks.onCritical) {
+      // WE MUST SEND THE DATA HERE TOO
+      callbacks.onCritical({ 
+        type: 'IMPLOSION',
+        finalState: { ...reactorState }, // <--- THIS LINE SAVES THE CRASH
+        survivalTime: reactorState.survivalTime
+      });
+    }
   }
   
   triggerUpdate();
+  
   return reactorState;
 }
 
