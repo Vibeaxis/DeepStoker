@@ -271,28 +271,39 @@ export default function Dashboard({ career, onShiftEnd }) {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+  const useReactorAudio = (avgDanger, isActive, isPaused) => {
   useEffect(() => {
-  if (state.isPaused) return;
+    if (!isActive || isPaused) return;
 
-  // Simulate a low-frequency reactor hum using the Web Audio API
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
 
-  oscillator.type = 'sawtooth';
-  // Hum frequency rises with danger: 40Hz (safe) to 120Hz (critical)
-  oscillator.frequency.setValueAtTime(40 + (avgDanger * 0.8), audioCtx.currentTime);
-  
-  // Volume fluctuates with 'Heavy Current' sway
-  gainNode.gain.setValueAtTime(0.1 + (state.hazardState.heavyCurrent ? 0.05 : 0), audioCtx.currentTime);
+    // Use a Sine wave for a smooth, pure tone
+    osc.type = 'sine';
+    // Deep rumble: 30Hz to 60Hz max
+    osc.frequency.setValueAtTime(30 + (avgDanger * 0.3), audioCtx.currentTime);
+    
+    // Low pass filter cuts all the "annoying" high frequencies
+    filter.type = 'lowpass';
+    filter.frequency.value = 150; 
 
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  oscillator.start();
+    // Very low volume - just a presence
+    gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
 
-  return () => oscillator.stop(); // Cleanup on unmount or pause
-}, [avgDanger, state.hazardState.heavyCurrent, state.isPaused]);
-// Inside your Dashboard component
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+
+    return () => {
+      osc.stop();
+      audioCtx.close();
+    };
+  }, [avgDanger, isActive, isPaused]);
+};
 const [fogLevel, setFogLevel] = useState(0); // 0 to 100
 
 useEffect(() => {
