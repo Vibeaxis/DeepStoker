@@ -154,6 +154,12 @@ const handleShiftEnd = (data) => {
       </div>
     );
   }
+// === INSERT THIS BLOCK RIGHT HERE ===
+  const appStyles = {
+    filter: `brightness(${settings.gamma})`, 
+    // If settings.uiScale is undefined, default to 100 to prevent crash
+    fontSize: `${settings.uiScale || 100}%` 
+  };
 
  return (
     <AuthProvider>
