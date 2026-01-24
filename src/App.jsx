@@ -46,9 +46,11 @@ function App() {
     const currentCareer = loadCareer();
     recordShift(currentCareer, data.success, data.survivalTime, totalCredits);
     
-    if (data.finalState.hullIntegrity !== undefined) {
-       updateHullIntegrity(currentCareer, data.finalState.hullIntegrity);
-    }
+    if (data.success && data.finalState.hullIntegrity !== undefined) {
+    updateHullIntegrity(currentCareer, data.finalState.hullIntegrity);
+  } else {
+    updateHullIntegrity(currentCareer, 100); // Auto-repair on failure
+  }
     
     // Reload career to get updated stats (ranks, etc.)
     const updatedCareer = loadCareer();

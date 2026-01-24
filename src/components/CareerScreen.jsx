@@ -22,7 +22,13 @@ export default function CareerScreen({ career, onStartShift, onCareerUpdate }) {
   
   const playerProfile = usePlayerProfile();
   const { updateCallsign } = useLeaderboard();
-
+// Add this inside the component to ensure we never render a "dead" screen
+useEffect(() => {
+  if (career && career.hullIntegrity <= 0) {
+    career.hullIntegrity = 100;
+    onCareerUpdate(); // Force a save/refresh of the fixed health
+  }
+}, [career]);
   // Sync profile callsign to local state for editing
   useEffect(() => {
     if (!playerProfile.loading) {
