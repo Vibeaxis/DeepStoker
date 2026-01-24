@@ -384,9 +384,12 @@ export function updateControlAlignment(controlType, isAligned) {
   }
 }
 
-// --- Main Loop ---
+// --- Updated Main Loop Logic ---
 
-export function initializeReactor(rank = 'Novice', upgrades = [], initialHullIntegrity = 100) {
+export function initializeReactor(rank = 'Novice', upgrades = [], initialHullIntegrity = 100, config = {}) {
+  // Pull duration from config (defaulting to 300 if missing)
+  const shiftDuration = config.duration || 300;
+
   reactorState = {
     temperature: 30,
     pressure: 30,
@@ -394,6 +397,9 @@ export function initializeReactor(rank = 'Novice', upgrades = [], initialHullInt
     hullIntegrity: initialHullIntegrity,
     survivalTime: 0,
     elapsedTime: 0,
+    shiftDuration: shiftDuration, // NEW: Track the target end time
+    reactorType: config.reactorType || 'circle', // NEW: Level 2 Toggle
+    difficultyMult: config.difficultyMult || 1.0, // NEW: Payout multiplier
     isActive: true,
     isPaused: false,
     intervalId: null,
@@ -401,10 +407,13 @@ export function initializeReactor(rank = 'Novice', upgrades = [], initialHullInt
     upgrades
   };
   
+  // Apply Level 2 Difficulty: If it's a star, base drift is higher
+  const baseDrift = reactorState.reactorType === 'star' ? 1.4 : 1.1;
+
   driftMultipliers = {
-    temperature: 1.1,
-    pressure: 1.1,
-    containment: 1.1
+    temperature: baseDrift,
+    pressure: baseDrift,
+    containment: baseDrift
   };
   
   controlAlignment = {
@@ -418,7 +427,7 @@ export function initializeReactor(rank = 'Novice', upgrades = [], initialHullInt
   recentLogs = []; 
   lastStatusLogTime = Date.now();
   
-  logSignificantEvent("SHIFT STARTED");
+  logSignificantEvent(`SHIFT STARTED: ${shiftDuration}s GOAL`);
   initializeHazardSystem();
   
   return { ...reactorState, hazardState, recentLogs, showPurgeButton, driftMultipliers };
@@ -433,9 +442,16 @@ export function startReactorLoop(onUpdate, onCritical) {
   }
   
   reactorState.intervalId = setInterval(() => {
-    updateReactor(0.5);
+    // Check if shift is complete before updating
+    if (reactorState.elapsedTime >= reactorState.shiftDuration) {
+      handleShiftSuccess();
+      return;
+    }
+    
+    updateReactor(0.5); // Progress by 0.5 seconds
   }, 500);
 }
+
 
 export function stopReactorLoop() {
   if (reactorState.intervalId) {

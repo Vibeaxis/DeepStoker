@@ -271,6 +271,27 @@ export default function Dashboard({ career, onShiftEnd }) {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+  useEffect(() => {
+  if (state.isPaused) return;
+
+  // Simulate a low-frequency reactor hum using the Web Audio API
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = 'sawtooth';
+  // Hum frequency rises with danger: 40Hz (safe) to 120Hz (critical)
+  oscillator.frequency.setValueAtTime(40 + (avgDanger * 0.8), audioCtx.currentTime);
+  
+  // Volume fluctuates with 'Heavy Current' sway
+  gainNode.gain.setValueAtTime(0.1 + (state.hazardState.heavyCurrent ? 0.05 : 0), audioCtx.currentTime);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  oscillator.start();
+
+  return () => oscillator.stop(); // Cleanup on unmount or pause
+}, [avgDanger, state.hazardState.heavyCurrent, state.isPaused]);
 // Inside your Dashboard component
 const [fogLevel, setFogLevel] = useState(0); // 0 to 100
 
