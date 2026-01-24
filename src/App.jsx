@@ -63,40 +63,45 @@ const handleUpdateSettings = (key, value) => {
   setCurrentScreen('shift');
 };
 
-  const handleShiftEnd = (data) => {
+ const handleShiftEnd = (data) => {
+    // FIX: Handle both "nested" and "flat" data structures
+    // If finalState exists, use it. Otherwise, assume 'data' itself holds the stats.
+    const finalState = data.finalState || data;
+
     const creditsCalc = calculateDepthCredits();
     
-    // Calculate logic
-    const avgDanger = (data.finalState.temperature + data.finalState.pressure + data.finalState.containment) / 3;
-    let multiplier = 1.0;
+    // Now use 'finalState' variable instead of 'data.finalState'
+    const avgDanger = (finalState.temperature + finalState.pressure + finalState.containment) / 3;
     
+    let multiplier = 1.0;
     if (avgDanger < 50) multiplier = 2.0;
     else if (avgDanger < 70) multiplier = 1.5;
     else if (avgDanger < 85) multiplier = 1.2;
     
     if (!data.success) multiplier = 0.5;
 
-    const baseCredits = Math.floor(data.survivalTime / 5);
-    const totalCredits = Math.floor(baseCredits * multiplier);
+    // Use the 'shiftMult' we added to the credits calculation if available
+    const shiftMultiplier = finalState.difficultyMult || 1.0;
 
-    // Update persistent career using updated recordShift
-    // Note: recordShift updates local storage internally
+    const baseCredits = Math.floor(data.survivalTime / 5);
+    // Apply the Shift Multiplier to the total
+    const totalCredits = Math.floor(baseCredits * multiplier * shiftMultiplier);
+
     const currentCareer = loadCareer();
     recordShift(currentCareer, data.success, data.survivalTime, totalCredits);
     
-    if (data.success && data.finalState.hullIntegrity !== undefined) {
-    updateHullIntegrity(currentCareer, data.finalState.hullIntegrity);
-  } else {
-    updateHullIntegrity(currentCareer, 100); // Auto-repair on failure
-  }
+    if (data.success && finalState.hullIntegrity !== undefined) {
+      updateHullIntegrity(currentCareer, finalState.hullIntegrity);
+    } else {
+      updateHullIntegrity(currentCareer, 100); 
+    }
     
-    // Reload career to get updated stats (ranks, etc.)
     const updatedCareer = loadCareer();
     setCareer(updatedCareer);
 
-    // Update state for ShiftEnd screen
     setShiftData({
       ...data,
+      finalState, // Ensure the UI receives the normalized state
       creditsEarned: totalCredits
     });
 
