@@ -64,33 +64,45 @@ const handleUpdateSettings = (key, value) => {
 };
 
  const handleShiftEnd = (data) => {
-    // FIX: Handle both "nested" and "flat" data structures
-    // If finalState exists, use it. Otherwise, assume 'data' itself holds the stats.
-    const finalState = data.finalState || data;
+   // 1. SANITIZE INPUT IMMEDIATELY
+   // If data is missing, create a safe default structure
+   const safeData = data || { success: false, survivalTime: 0 };
+   
+   // 2. NORMALIZE FINAL STATE
+   // Handle the case where data exists but .finalState is missing (common in crashes)
+   // We default to safeData itself, or an empty object if that fails
+   const finalState = safeData.finalState || safeData || {};
+   
+   // 3. SAFE PROPERTY ACCESS (Use Nullish Coalescing ??)
+   const temp = finalState.temperature ?? 0;
+   const press = finalState.pressure ?? 0;
+   const cont = finalState.containment ?? 0;
 
-    const creditsCalc = calculateDepthCredits();
-    
-    // Now use 'finalState' variable instead of 'data.finalState'
-    const avgDanger = (finalState.temperature + finalState.pressure + finalState.containment) / 3;
+   const avgDanger = (temp + press + cont) / 3;
     
     let multiplier = 1.0;
     if (avgDanger < 50) multiplier = 2.0;
     else if (avgDanger < 70) multiplier = 1.5;
     else if (avgDanger < 85) multiplier = 1.2;
     
-    if (!data.success) multiplier = 0.5;
+    // FIX: Use safeData, not data
+    if (!safeData.success) multiplier = 0.5;
 
-    // Use the 'shiftMult' we added to the credits calculation if available
     const shiftMultiplier = finalState.difficultyMult || 1.0;
 
-    const baseCredits = Math.floor(data.survivalTime / 5);
-    // Apply the Shift Multiplier to the total
+    // FIX: Use safeData, not data (and ensure survivalTime is a number)
+    const survivalTime = safeData.survivalTime || 0;
+    const baseCredits = Math.floor(survivalTime / 5);
+    
     const totalCredits = Math.floor(baseCredits * multiplier * shiftMultiplier);
 
     const currentCareer = loadCareer();
-    recordShift(currentCareer, data.success, data.survivalTime, totalCredits);
     
-    if (data.success && finalState.hullIntegrity !== undefined) {
+    // FIX: Use safeData
+    recordShift(currentCareer, safeData.success, survivalTime, totalCredits);
+    
+    // FIX: Use safeData
+    if (safeData.success && finalState.hullIntegrity !== undefined) {
       updateHullIntegrity(currentCareer, finalState.hullIntegrity);
     } else {
       updateHullIntegrity(currentCareer, 100); 
@@ -100,8 +112,8 @@ const handleUpdateSettings = (key, value) => {
     setCareer(updatedCareer);
 
     setShiftData({
-      ...data,
-      finalState, // Ensure the UI receives the normalized state
+      ...safeData, // FIX: Spread the safe object, not the potentially null 'data'
+      finalState,  // This guarantees ShiftEnd.js gets the object it needs
       creditsEarned: totalCredits
     });
 
