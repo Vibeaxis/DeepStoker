@@ -26,6 +26,7 @@ function App() {
  const [currentScreen, setCurrentScreen] = useState('title');
   const [career, setCareer] = useState(null);
   const [shiftData, setShiftData] = useState(null);
+  const [settings, setSettings] = useState(loadSettings());
 // Add a state for the settings overlay toggle
 const [showSettings, setShowSettings] = useState(false);
   useEffect(() => {
