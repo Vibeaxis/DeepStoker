@@ -47,7 +47,12 @@ export default function CareerScreen({ career, onStartShift, onCareerUpdate }) {
       });
     }
   };
-
+const handleStartShift = () => {
+  const currentCareer = loadCareer();
+  // FORCE 100 as the third argument so every shift starts fresh
+  initializeReactor(currentCareer.currentRank, currentCareer.upgrades, 100); 
+  setCurrentScreen('shift');
+};
   const handleUpdateCallsign = async () => {
     if (!newCallsign.trim()) return;
     

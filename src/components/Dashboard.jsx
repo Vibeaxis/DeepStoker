@@ -356,32 +356,38 @@ const handleWipe = () => {
             </div>
           </div>
         </div>
-{/* HUD Decorative Elements - Fleshed Out Version */}
-<div className="absolute top-24 left-4 hidden lg:block z-30 pointer-events-none">
-  <div className="bg-black/40 backdrop-blur-sm border-l-2 border-emerald-500/50 p-2 space-y-1">
-    <div className="text-[10px] text-cyan-400 font-mono flex justify-between gap-4">
-      <span className="opacity-50">ACOUSTIC PING:</span> 
-      <span className="animate-pulse">ACTIVE</span>
-    </div>
-    <div className="text-[10px] text-emerald-400 font-mono flex justify-between">
-      <span className="opacity-50">EXT_PRESS:</span> 40.2 MPa
-    </div>
-    <div className="text-[10px] text-blue-400 font-mono flex justify-between">
-      <span className="opacity-50">COORDS:</span> 34.22 / 11.08
+{/* Left Side Pod: Navigation & Pressure */}
+<div className="absolute top-1/2 -translate-y-1/2 left-4 hidden lg:block z-30 pointer-events-none">
+  <div className="bg-zinc-950/90 border-2 border-cyan-500/50 p-3 space-y-3 w-48 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+    <div className="text-[10px] text-cyan-400 font-black border-b border-cyan-500/30 pb-1">NAV_TELEMETRY</div>
+    <div className="space-y-1">
+      <div className="flex justify-between text-[11px] text-cyan-500 font-bold">
+        <span>ACOUSTIC:</span> <span className="animate-pulse text-cyan-300">ACTIVE</span>
+      </div>
+      <div className="flex justify-between text-[11px] text-emerald-400 font-bold">
+        <span>EXT_PRESS:</span> 40.2 MPa
+      </div>
+      <div className="flex justify-between text-[11px] text-blue-400 font-bold">
+        <span>DEPTH:</span> 4,200M
+      </div>
     </div>
   </div>
 </div>
 
-<div className="absolute top-24 right-4 hidden lg:block z-30 pointer-events-none text-right">
-  <div className="bg-black/40 backdrop-blur-sm border-r-2 border-orange-500/50 p-2 space-y-1">
-    <div className="text-[10px] text-emerald-400 font-mono flex justify-between gap-4">
-      <span className="opacity-50">O2_LEVEL:</span> 98%
-    </div>
-    <div className="text-[10px] text-orange-400 font-mono flex justify-between">
-      <span className="opacity-50">RADIATION:</span> LOW
-    </div>
-    <div className="text-[10px] text-purple-400 font-mono flex justify-between">
-      <span className="opacity-50">LINK:</span> STABLE
+{/* Right Side Pod: Life Support & Link */}
+<div className="absolute top-1/2 -translate-y-1/2 right-4 hidden lg:block z-30 pointer-events-none text-right">
+  <div className="bg-zinc-950/90 border-2 border-orange-500/50 p-3 space-y-3 w-48 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]">
+    <div className="text-[10px] text-orange-400 font-black border-b border-orange-500/30 pb-1">STAT_READOUT</div>
+    <div className="space-y-1">
+      <div className="flex justify-between text-[11px] text-emerald-500 font-bold">
+        <span>O2_LEVEL:</span> 98%
+      </div>
+      <div className="flex justify-between text-[11px] text-orange-400 font-bold">
+        <span>RADIATION:</span> LOW
+      </div>
+      <div className="flex justify-between text-[11px] text-purple-400 font-bold">
+        <span>LINK:</span> STABLE
+      </div>
     </div>
   </div>
 </div>
@@ -412,83 +418,91 @@ const handleWipe = () => {
         {/* === REACTOR ZONE (Flex-1, Centered) === */}
         <div className="flex-1 w-full relative z-20 flex flex-col items-center justify-center p-2">
           
-         {/* Logs Overlay with Background for Readability */}
-<div className="absolute top-2 left-2 max-w-[220px] pointer-events-none z-50 hidden sm:block">
-  <div className="bg-black/60 backdrop-blur-md p-2 border-l border-emerald-500/30">
-    <div ref={logContainerRef} className="max-h-32 overflow-hidden flex flex-col-reverse">
-      {state.recentLogs.slice(-3).map((log) => (
-        <div key={log.id} className="text-[10px] text-emerald-400 font-mono leading-tight mb-1 shadow-sm">
-          <span className="text-emerald-600 mr-1">[{log.timestamp.split(':')[1]}:{log.timestamp.split(':')[2]}]</span>
-          {log.message}
+{/* === COMMAND LOG CONSOLE === */}
+<div className="absolute top-4 left-4 z-50 w-72 pointer-events-none hidden md:block">
+  <div className="bg-black/80 backdrop-blur-xl border-l-4 border-emerald-500 p-3 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+    <div className="text-[10px] text-emerald-500 font-black mb-2 tracking-[0.2em] uppercase border-b border-emerald-500/20 pb-1">
+      System Event Log
+    </div>
+    <div ref={logContainerRef} className="max-h-32 overflow-hidden flex flex-col-reverse gap-1.5">
+      {state.recentLogs.slice(-4).map((log) => (
+        <div key={log.id} className="text-[11px] text-emerald-400 font-mono leading-tight flex gap-2">
+          <span className="text-emerald-700 shrink-0">[{log.timestamp.split(' ')[0]}]</span>
+          <span className="font-bold">{log.message}</span>
         </div>
       ))}
     </div>
   </div>
 </div>
+         {/* Reactor Container */}
+<div className={`relative transition-transform duration-500 ${state.hazardState.heavyCurrent ? 'animate-sway' : ''}`}>
+  
+  {state.hazardState.deepSeaEntity && (
+    <div className="entity-shadow animate-entity"></div>
+  )}
+  
+  <div className="relative z-20 flex items-center justify-center">
+    {/* Emergency Button overlay */}
+    <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-50">
+        <EmergencyPurgeButton 
+          show={state.showPurgeButton} 
+          onPurge={handleEmergencyPurge} 
+        />
+    </div>
 
-          {/* Reactor Container */}
-          <div className={`relative transition-transform duration-500 ${state.hazardState.heavyCurrent ? 'animate-sway' : ''}`}>
-            
-            {state.hazardState.deepSeaEntity && (
-              <div className="entity-shadow animate-entity"></div>
-            )}
-            
-            <div className="relative z-20 flex items-center justify-center">
-               {/* Emergency Button overlay */}
-               <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-50">
-                   <EmergencyPurgeButton 
-                      show={state.showPurgeButton} 
-                      onPurge={handleEmergencyPurge} 
-                   />
-               </div>
-
-              <motion.div
-                className={`reactor-core ${getCoreColor()}`}
-               animate={!state.isPaused ? {
-  scale: avgDanger > 85 ? [1, 1.15, 1] : [1, 1.05, 1], // More violent pulsing at high danger
-  filter: [
-    `drop-shadow(0 0 20px ${getCoreColor()})`,
-    `drop-shadow(0 0 50px ${getCoreColor()})`,
-    `drop-shadow(0 0 20px ${getCoreColor()})`
-  ]
-} : {}}
-                transition={{
-                  duration: avgDanger > 85 ? 0.5 : avgDanger > 60 ? 1 : 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  <div className={`text-4xl font-black mb-1 ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}>
-                    {Math.round(avgDanger)}
-                  </div>
-                  <div className="text-[10px] opacity-80 mb-2">STATUS</div>
-                  
-                  {/* Stats inside Orb */}
-                  <div className="space-y-0.5 text-left w-full px-6 leading-none">
-                    <div className="flex justify-between text-[10px]">
-                      <span>T:</span>
-                      <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>
-                        {Math.round(state.temperature)}°
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-[10px]">
-                      <span>P:</span>
-                      <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>
-                        {Math.round(state.pressure)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-[10px]">
-                      <span>C:</span>
-                      <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>
-                        {Math.round(state.containment)}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+    <motion.div
+      className={`reactor-core ${getCoreColor()}`}
+      animate={!state.isPaused ? {
+        scale: avgDanger > 85 ? [1, 1.15, 1] : [1, 1.05, 1],
+        filter: [
+          `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
+          `drop-shadow(0 0 50px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
+          `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`
+        ]
+      } : {}}
+      transition={{
+        duration: avgDanger > 85 ? 0.5 : avgDanger > 60 ? 1 : 2,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+    >
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+        {/* Main Danger Number with Heavy Outline for Pop */}
+        <div 
+          className={`text-4xl font-black mb-1 ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
+          style={{ 
+            textShadow: '0 0 10px rgba(0,0,0,0.8), -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000' 
+          }}
+        >
+          {Math.round(avgDanger)}
+        </div>
+        <div className="text-[10px] font-bold opacity-90 mb-2 tracking-widest" style={{ textShadow: '1px 1px 2px #000' }}>STATUS</div>
+        
+        {/* Stats inside Orb with increased visibility */}
+        <div className="space-y-1 text-left w-full px-6 leading-none">
+          <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+            <span className="opacity-70">T:</span>
+            <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>
+              {Math.round(state.temperature)}°
+            </span>
           </div>
+          <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+            <span className="opacity-70">P:</span>
+            <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>
+              {Math.round(state.pressure)}
+            </span>
+          </div>
+          <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+            <span className="opacity-70">C:</span>
+            <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>
+              {Math.round(state.containment)}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+</div>
         </div>
         
     {/* === CONTROL DOCK === */}
