@@ -210,7 +210,7 @@ export default function Dashboard({ career, onShiftEnd }) {
     driftMultipliers: { temperature: 1.1, pressure: 1.1, containment: 1.1 },
     isPaused: false
   });
-  
+    const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
   const [timeRemaining, setTimeRemaining] = useState(SHIFT_DURATION);
   const [ventValue, setVentValue] = useState([50]);
   const [coolantValue, setCoolantValue] = useState([50]);
@@ -229,7 +229,11 @@ export default function Dashboard({ career, onShiftEnd }) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
   }, [state.recentLogs]);
-
+// ------------------------------------------------------
+  // 2. ACTUALLY CALL THE HOOK HERE
+  // ------------------------------------------------------
+  // We pass 'true' for isActive because if this component is mounted, the reactor is active.
+  useReactorAudio(avgDanger, true, state.isPaused);
   useEffect(() => {
     const styleElement = document.createElement('style');
     styleElement.textContent = REACTOR_CORE_STYLES;
@@ -317,7 +321,7 @@ export default function Dashboard({ career, onShiftEnd }) {
     triggerEmergencyPurge();
   };
   
-  const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
+
   const isHullCritical = state.hullIntegrity < 25;
   const anyCritical = state.temperature > 85 || state.pressure > 85 || state.containment > 85;
   
