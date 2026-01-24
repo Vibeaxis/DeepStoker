@@ -191,14 +191,41 @@ const handleShiftEnd = (data) => {
           />
         )}
 
-        {/* Title Screen Branch */}
+   {/* Title Screen Branch */}
         {currentScreen === 'title' && (
-           /* ... Your Title Screen Code ... */
-           <div className="relative h-screen w-full flex flex-col items-center justify-center bg-black font-orbitron">
-             <h1 className="text-6xl text-emerald-500 mb-8">DEEP STOKER</h1>
-             <button onClick={() => setCurrentScreen('career')} className="px-8 py-4 bg-emerald-600 text-black font-bold mb-4">ENTER</button>
-             <button onClick={() => setShowSettings(true)} className="text-emerald-500 border-b border-emerald-500">CONFIG</button>
-           </div>
+          <div className="relative h-screen w-full flex flex-col items-center justify-center bg-black overflow-hidden font-orbitron">
+            {/* Background Ambient Visual */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+              <div className="w-full h-full bg-[radial-gradient(circle_at_center,_#10b981_0%,_transparent_70%)] animate-pulse" />
+            </div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="z-10 text-center"
+            >
+              <h1 className="text-7xl font-black text-emerald-500 mb-2 tracking-tighter drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+                DEEP STOKER
+              </h1>
+              <p className="text-emerald-300/60 text-xs tracking-[0.5em] mb-12 uppercase">Sub-Oceanic Fusion Management</p>
+              
+              <div className="flex flex-col gap-4 items-center">
+                <button 
+                  onClick={() => setCurrentScreen('career')}
+                  className="w-64 h-14 bg-emerald-600 hover:bg-emerald-400 text-black font-black text-lg skew-x-[-10deg] transition-all hover:scale-105"
+                >
+                  ENTER SYSTEM
+                </button>
+                
+                <button 
+                  onClick={() => setShowSettings(true)}
+                  className="w-64 h-12 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 font-bold text-sm tracking-widest"
+                >
+                  CONFIGURATION
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
 
         {/* 3. UPDATED SETTINGS OVERLAY */}
