@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { addCredits, loadCareer } from '@/utils/CareerProfile'; 
+import { addCredits, loadCareer, saveCareer } from '@/utils/CareerProfile'; 
 import { CheckCircle, XCircle, Award, Clock, Flame, Droplet, Zap, ShieldAlert, UploadCloud } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { usePlayerProfile } from '@/hooks/usePlayerProfile';
@@ -11,16 +11,28 @@ import PromotionModal from './PromotionModal';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }) {
-  // --- THE FIX IS HERE ---
-  // If finalState is missing (flat data), use shiftData itself.
-  // This prevents the 'pressure of undefined' crash.
-  const finalState = shiftData.finalState || shiftData;
-
-  const { success, survivalTime, disasterType, creditsEarned } = shiftData;
-  const earnedTotal = creditsEarned;
+  // 1. SAFETY FIRST: Handle missing or malformed data
+  // If shiftData is missing, default to empty object
+  const safeData = shiftData || {};
   
-  // Now we safely use finalState because we guaranteed it exists above
-  const avgDanger = ((finalState.temperature || 0) + (finalState.pressure || 0) + (finalState.containment || 0)) / 3;
+  // If finalState is missing, try to use safeData itself, or empty object
+  const finalState = safeData.finalState || safeData || {};
+
+  // 2. SAFE EXTRACTION: Use '?. property' and '?? default'
+  // This prevents "Cannot read properties of undefined" completely
+  const temperature = finalState?.temperature ?? 0;
+  const pressure = finalState?.pressure ?? 0;
+  const containment = finalState?.containment ?? 0;
+  const hullIntegrity = finalState?.hullIntegrity ?? 0;
+  
+  const success = safeData?.success ?? false;
+  const survivalTime = safeData?.survivalTime ?? 0;
+  const disasterType = safeData?.disasterType || null;
+  const creditsEarned = safeData?.creditsEarned ?? 0;
+  const difficultyMult = finalState?.difficultyMult ?? 1.0;
+
+  // Now math is safe because we guaranteed numbers above
+  const avgDanger = (temperature + pressure + containment) / 3;
   const isImplosion = disasterType === 'IMPLOSION';
 
   const [syncStatus, setSyncStatus] = useState('idle'); 
@@ -35,7 +47,6 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
 
   useEffect(() => {
     const career = loadCareer();
-    // Check for promotion logic
     if (career.lastPromotionRank && career.lastPromotionRank !== career.currentRank) {
        setPromotionDetails({
            oldRank: career.lastPromotionRank,
@@ -76,8 +87,8 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
       if (success) {
         setSyncStatus('success');
         toast({
-           title: "Data Synced",
-           description: "Your shift record has been uploaded to the network.",
+            title: "Data Synced",
+            description: "Your shift record has been uploaded to the network.",
         });
       } else {
         setSyncStatus('error');
@@ -93,7 +104,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
     addCredits(career, 1000); 
     
     career.lastPromotionRank = career.currentRank; 
-    saveCareer(career); // Ensure this state is saved
+    saveCareer(career); 
     
     toast({
       title: "Bonus Received",
@@ -101,7 +112,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
     });
     
     setShowPromotion(false);
-    handleSyncData(career); // Sync the updated career
+    handleSyncData(career); 
     
     if (onCareerUpdate) onCareerUpdate();
   };
@@ -163,10 +174,10 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   SHIFT COMPLETE
                 </h1>
                 <p className="text-emerald-300 text-lg">Reactor stabilized successfully</p>
-                {/* NEW: Show Shift Multiplier if it exists */}
-                {shiftData.difficultyMult > 1.0 && (
+                
+                {difficultyMult > 1.0 && (
                    <div className="mt-2 text-xs font-bold text-orange-400 border border-orange-500/30 inline-block px-2 py-1 rounded bg-orange-950/30 uppercase tracking-widest">
-                      Difficulty Bonus: {shiftData.difficultyMult}x
+                      Difficulty Bonus: {difficultyMult}x
                    </div>
                 )}
               </motion.div>
@@ -228,7 +239,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   <span className="text-white">Temperature</span>
                 </div>
                 <div className="text-xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  {Math.round(finalState.temperature || 0)}°
+                  {Math.round(temperature)}°
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -237,7 +248,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   <span className="text-white">Pressure</span>
                 </div>
                 <div className="text-xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  {Math.round(finalState.pressure || 0)} PSI
+                  {Math.round(pressure)} PSI
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -246,16 +257,16 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   <span className="text-white">Containment</span>
                 </div>
                 <div className="text-xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  {Math.round(finalState.containment || 0)}%
+                  {Math.round(containment)}%
                 </div>
               </div>
               <div className="flex items-center justify-between border-t border-emerald-500/20 pt-2 mt-2">
                 <div className="flex items-center gap-2">
-                  <ShieldAlert className={`w-5 h-5 ${finalState.hullIntegrity < 25 ? 'text-red-500' : 'text-emerald-400'}`} />
+                  <ShieldAlert className={`w-5 h-5 ${hullIntegrity < 25 ? 'text-red-500' : 'text-emerald-400'}`} />
                   <span className="text-white">Hull Integrity</span>
                 </div>
-                <div className={`text-xl font-bold ${finalState.hullIntegrity < 25 ? 'text-red-500' : 'text-emerald-400'}`} style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  {Math.round(finalState.hullIntegrity || 0)}%
+                <div className={`text-xl font-bold ${hullIntegrity < 25 ? 'text-red-500' : 'text-emerald-400'}`} style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  {Math.round(hullIntegrity)}%
                 </div>
               </div>
             </div>
@@ -268,7 +279,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                 <div>
                   <div className="text-sm text-emerald-300">Total</div>
                   <div className="text-4xl font-black text-emerald-400" style={{ fontFamily: "'Orbitron', sans-serif", textShadow: '0 0 20px rgba(16, 185, 129, 0.5)' }}>
-                    {earnedTotal}
+                    {creditsEarned}
                   </div>
                 </div>
               </div>

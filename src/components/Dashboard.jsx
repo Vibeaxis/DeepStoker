@@ -46,15 +46,15 @@ const useReactorAudio = (avgDanger, isActive, isPaused) => {
     const gain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
 
-    // --- AUDIBILITY FIXES ---
-    osc.type = 'triangle'; // Triangles cut through mixes better
+   // --- AUDIBILITY FIXES ---
+    osc.type = 'sine'; // CHANGE THIS from 'triangle' to 'sine'
     filter.type = 'lowpass';
     
-    // CHANGED: Raised filter from 200 to 800 so you can actually hear it
-    filter.frequency.value = 800; 
+    // Lower the filter to muffle it (like it's underwater)
+    filter.frequency.value = 200; // Was 800
     
-    // CHANGED: Bumped start volume from 0.05 to 0.1
-    gain.gain.value = 0.1; 
+    // Lower volume slightly so it doesn't clip
+    gain.gain.value = 0.15;
 
     osc.connect(filter);
     filter.connect(gain);
@@ -79,7 +79,7 @@ const useReactorAudio = (avgDanger, isActive, isPaused) => {
     
     // CHANGED: Base frequency 60 -> 120. 
     // 60Hz is invisible on laptops. 120Hz is a low hum.
-    const targetFreq = 120 + (avgDanger * 2); 
+    const targetFreq = 60 + (avgDanger * 1.5); 
     oscRef.current.frequency.setTargetAtTime(targetFreq, ctx.currentTime, 0.1);
 
     const targetVol = 0.1 + (avgDanger > 80 ? 0.1 : 0);
