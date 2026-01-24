@@ -549,9 +549,9 @@ const handleWipe = () => {
     {/* === CONDITIONAL RENDERING: STAR vs CIRCLE === */}
     {state.reactorType === 'star' ? (
       // ==========================
-      // OPTION A: THE STAR REACTOR
+      // OPTION A: THE STAR REACTOR (FIXED VISUALS)
       // ==========================
-      <div className="relative flex items-center justify-center" style={{ width: '38vh', height: '38vh' }}>
+      <div className="relative flex items-center justify-center" style={{ width: '40vh', height: '40vh' }}>
          {/* 1. The Rotating Star Shape (Background) */}
          <motion.svg 
             viewBox="0 0 100 100" 
@@ -583,37 +583,40 @@ const handleWipe = () => {
               </radialGradient>
             </defs>
             
-            {/* The Solid Star Polygon */}
+            {/* FIX: Thinner stroke, lower opacity */}
             <polygon 
                points="50,5 61,35 95,35 67,57 78,91 50,70 22,91 33,57 5,35 39,35"
                fill={`url(#star${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
                stroke="white"
-               strokeWidth="1.5"
-               strokeOpacity="0.8"
+               strokeWidth="0.5" 
+               strokeOpacity="0.4"
             />
          </motion.svg>
          
-         {/* 2. The Text Overlay (Stationary) */}
+         {/* 2. The Text Overlay (Centered & Tight) */}
          <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            
+            {/* Main Number */}
             <div 
-              className={`text-4xl font-black mb-1 ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
-              style={{ textShadow: '0 0 10px rgba(0,0,0,0.8), 2px 2px 0 #000' }}
+              className={`text-5xl font-black mb-0 leading-none ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
+              style={{ textShadow: '0 0 15px rgba(0,0,0,0.8), 2px 2px 0 #000' }}
             >
               {Math.round(avgDanger)}
             </div>
-            <div className="text-[10px] font-bold opacity-90 mb-2 tracking-widest" style={{ textShadow: '1px 1px 2px #000' }}>STATUS</div>
+            <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.2em]">STATUS</div>
             
-            <div className="space-y-1 text-left w-full px-12 leading-none">
-              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                <span className="opacity-70">T:</span>
+            {/* FIX: Centered Stats Stack */}
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-60 w-3 text-right">T</span>
                 <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.temperature)}°</span>
               </div>
-              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                <span className="opacity-70">P:</span>
+              <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-60 w-3 text-right">P</span>
                 <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.pressure)}</span>
               </div>
-              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                <span className="opacity-70">C:</span>
+              <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-60 w-3 text-right">C</span>
                 <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.containment)}%</span>
               </div>
             </div>
@@ -641,26 +644,27 @@ const handleWipe = () => {
           ease: "easeInOut"
         }}
       >
+          {/* FIX: Use the same centered layout for the circle too, it looks cleaner */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
             <div 
-              className={`text-4xl font-black mb-1 ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
+              className={`text-5xl font-black mb-0 leading-none ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
               style={{ textShadow: '0 0 10px rgba(0,0,0,0.8), -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000' }}
             >
               {Math.round(avgDanger)}
             </div>
-            <div className="text-[10px] font-bold opacity-90 mb-2 tracking-widest" style={{ textShadow: '1px 1px 2px #000' }}>STATUS</div>
+            <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.2em]">STATUS</div>
             
-            <div className="space-y-1 text-left w-full px-6 leading-none">
-              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                <span className="opacity-70">T:</span>
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-60 w-3 text-right">T</span>
                 <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.temperature)}°</span>
               </div>
-              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                <span className="opacity-70">P:</span>
+              <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-60 w-3 text-right">P</span>
                 <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.pressure)}</span>
               </div>
-              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                <span className="opacity-70">C:</span>
+              <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-60 w-3 text-right">C</span>
                 <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.containment)}%</span>
               </div>
             </div>
