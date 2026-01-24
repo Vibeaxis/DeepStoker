@@ -272,37 +272,75 @@ export default function Dashboard({ career, onShiftEnd }) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
   const useReactorAudio = (avgDanger, isActive, isPaused) => {
+  const audioCtxRef = useRef(null);
+  const oscRef = useRef(null);
+  const gainRef = useRef(null);
+
+  // EFFECT 1: Setup and Teardown (Only runs when Shift starts/stops)
   useEffect(() => {
-    if (!isActive || isPaused) return;
+    if (!isActive || isPaused) {
+      // Cleanup: Stop sound if we pause or end shift
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close();
+        audioCtxRef.current = null;
+      }
+      return;
+    }
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
+    // 1. Initialize Audio Context
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    audioCtxRef.current = ctx;
 
-    // Use a Sine wave for a smooth, pure tone
-    osc.type = 'sine';
-    // Deep rumble: 30Hz to 60Hz max
-    osc.frequency.setValueAtTime(30 + (avgDanger * 0.3), audioCtx.currentTime);
-    
-    // Low pass filter cuts all the "annoying" high frequencies
+    // 2. Create Nodes
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    // 3. Configuration
+    // using 'triangle' for now so you can hear it on laptop speakers (sine is too deep/quiet)
+    osc.type = 'triangle'; 
     filter.type = 'lowpass';
-    filter.frequency.value = 150; 
+    filter.frequency.value = 200; // Let a little more sound through
+    gain.gain.value = 0.05; // Starting volume
 
-    // Very low volume - just a presence
-    gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
-
+    // 4. Wiring: Oscillator -> Filter -> Gain -> Speakers
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(audioCtx.destination);
-    
+    gain.connect(ctx.destination);
+
+    // 5. Ignition
     osc.start();
+    oscRef.current = osc;
+    gainRef.current = gain;
+
+    // Browser Autoplay Fix: Force resume if suspended
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
 
     return () => {
-      osc.stop();
-      audioCtx.close();
+      if (ctx.state !== 'closed') ctx.close();
+      audioCtxRef.current = null;
     };
-  }, [avgDanger, isActive, isPaused]);
+  }, [isActive, isPaused]); // dependency array NO LONGER includes avgDanger
+
+  // EFFECT 2: Modulation (Runs constantly to change pitch)
+  useEffect(() => {
+    if (!audioCtxRef.current || !oscRef.current) return;
+
+    const ctx = audioCtxRef.current;
+    
+    // Smoothly ramp frequency to avoid "popping" clicks
+    // Base 60Hz + Danger. (Raised base pitch so you can verify it works)
+    const targetFreq = 60 + (avgDanger * 0.5); 
+    oscRef.current.frequency.setTargetAtTime(targetFreq, ctx.currentTime, 0.1);
+
+    // Optional: Get louder as danger increases
+    const targetVol = 0.05 + (avgDanger > 80 ? 0.05 : 0);
+    gainRef.current.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1);
+    
+  }, [avgDanger]); // This effect ONLY updates the parameters, doesn't rebuild engine
 };
 const [fogLevel, setFogLevel] = useState(0); // 0 to 100
 
