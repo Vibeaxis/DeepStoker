@@ -119,8 +119,8 @@ function triggerUpdate() {
 // ==========================================
 // 4. CORE SIMULATION FUNCTIONS
 // ==========================================
-
 export function initializeReactor(rank = 'Novice', upgrades = [], initialHullIntegrity = 100, config = {}) {
+  // 1. Capture the duration passed from App.js (default to 300 if missing)
   const shiftDuration = config.duration || 300;
 
   reactorState = {

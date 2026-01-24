@@ -87,7 +87,7 @@ const useReactorAudio = (avgDanger, isActive, isPaused) => {
     
   }, [avgDanger]);
 };
-const SHIFT_DURATION = 300; // 5 minutes in seconds
+
 
 const REACTOR_CORE_STYLES = `
   .reactor-core {
@@ -192,6 +192,7 @@ const BinaryStarCore = ({ color, danger }) => (
   </svg>
 );
 export default function Dashboard({ career, onShiftEnd }) {
+  const initialState = getReactorState();
   const [state, setState] = useState({
     temperature: 30,
     pressure: 30,
@@ -211,7 +212,7 @@ export default function Dashboard({ career, onShiftEnd }) {
     isPaused: false
   });
     const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
-  const [timeRemaining, setTimeRemaining] = useState(SHIFT_DURATION);
+ const [timeRemaining, setTimeRemaining] = useState(initialState.shiftDuration || 300);
   const [ventValue, setVentValue] = useState([50]);
   const [coolantValue, setCoolantValue] = useState([50]);
   const [magneticsValue, setMagneticsValue] = useState([50]);
