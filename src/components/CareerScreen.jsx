@@ -335,26 +335,29 @@ const handleStartShift = () => {
             </div>
           </motion.div>
           
-          {/* Start Shift Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-center"
-          >
-            <Button
-              onClick={onStartShift}
-              className="h-16 px-12 text-xl font-black"
-              style={{ 
-                fontFamily: "'Orbitron', sans-serif",
-                background: 'linear-gradient(90deg, #10b981 0%, #0d9488 100%)',
-                boxShadow: '0 0 30px rgba(16, 185, 129, 0.5)',
-                border: '2px solid #10b981'
-              }}
-            >
-              START NEW SHIFT
-            </Button>
-          </motion.div>
+         {/* Shift Type Selection */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.5 }}
+  className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+>
+  {[
+    { id: 'quick', label: 'QUICK SWEEP', time: '3m', mult: '1.0x', color: 'from-emerald-600 to-teal-700' },
+    { id: 'standard', label: 'STANDARD WATCH', time: '5m', mult: '1.5x', color: 'from-teal-600 to-cyan-700' },
+    { id: 'deep', label: 'DEEP DIVE', time: '10m', mult: '3.0x', color: 'from-cyan-600 to-blue-700' },
+  ].map((shift) => (
+    <Button
+      key={shift.id}
+      onClick={() => onStartShift(shift.id)}
+      className={`h-24 flex flex-col bg-gradient-to-br ${shift.color} border-2 border-white/10 hover:border-white/40 transition-all`}
+      style={{ fontFamily: "'Orbitron', sans-serif" }}
+    >
+      <span className="text-lg font-black">{shift.label}</span>
+      <span className="text-xs opacity-80">{shift.time} DURATION // {shift.mult} PAYOUT</span>
+    </Button>
+  ))}
+</motion.div>
         </div>
       </div>
     </>
