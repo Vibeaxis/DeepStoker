@@ -1,10 +1,16 @@
-// Core reactor simulation engine
 import { RANKS } from './CareerProfile';
 
 // ==========================================
-// 1. STATE DEFINITIONS (MUST BE AT TOP)
+// 1. GLOBAL STATE (Stable Memory)
 // ==========================================
 
+// We use CONST for the array to ensure it never becomes 'undefined'
+const recentLogs = []; 
+const MAX_LOGS = 6;
+
+let callbacks = { onUpdate: null, onCritical: null };
+
+// Default state structure
 let reactorState = {
   temperature: 30,
   pressure: 30,
@@ -17,21 +23,9 @@ let reactorState = {
   intervalId: null,
   rank: 'Novice',
   upgrades: [],
-  shiftDuration: 300,   // Default
-  difficultyMult: 1.0,  // Default
-  reactorType: 'circle' // Default
-};
-
-let driftMultipliers = {
-  temperature: 1.1,
-  pressure: 1.1,
-  containment: 1.1
-};
-
-let controlAlignment = {
-  temperature: false,
-  pressure: false,
-  containment: false
+  shiftDuration: 300,
+  reactorType: 'circle',
+  difficultyMult: 1.0
 };
 
 let hazardState = {
@@ -41,46 +35,22 @@ let hazardState = {
   jammedSlider: null
 };
 
-let criticalTimers = {
-  temperature: 0,
-  pressure: 0,
-  containment: 0
-};
+let driftMultipliers = { temperature: 1.1, pressure: 1.1, containment: 1.1 };
+let controlAlignment = { temperature: false, pressure: false, containment: false };
+let criticalTimers = { temperature: 0, pressure: 0, containment: 0 };
 let showPurgeButton = false;
-
 let lastStatusLogTime = 0;
 const NOMINAL_LOG_INTERVAL = 30000;
-
-const MAX_LOGS = 6;
-let recentLogs = []; // Initialized empty array
-
 let hazardIntervalId = null;
 let activeHazardTimers = [];
 
-let callbacks = {
-  onUpdate: null,
-  onCritical: null
-};
-
 // ==========================================
-// 2. AUDIO HOOKS
-// ==========================================
-
-export function playHazardSound() { console.log("AUDIO: Hazard sound triggered"); }
-export function playLowPowerHum() { console.log("AUDIO: Low power hum triggered"); }
-export function playMetalCreak() { console.log("AUDIO: Metal creak triggered"); }
-export function playSuccessChime() { console.log("AUDIO: Success chime triggered"); }
-export function playImplosionSound() { console.log("AUDIO: IMPLOSION sound triggered"); }
-export function playLowFrequencyAlarm() { console.log("AUDIO: Low Frequency Alarm"); }
-export function playStaticNoise() { console.log("AUDIO: Static Noise Loop"); }
-
-// ==========================================
-// 3. LOGGING & HELPERS
+// 2. LOGGING SYSTEM (Must be defined first)
 // ==========================================
 
 export function logSignificantEvent(eventName) {
-  // Fix for 'slice' error: Ensure array exists
-  if (!recentLogs) recentLogs = [];
+  // Safety fallback (though const prevents this being needed usually)
+  if (!recentLogs) return;
 
   const allowedEvents = [
     "SHIFT STARTED", "STATIONARY STEADY", "PRESSURE ANOMALY", "HAZARD DETECTED", 
@@ -100,7 +70,13 @@ export function logSignificantEvent(eventName) {
     timestamp: new Date().toLocaleTimeString()
   };
 
-  recentLogs = [...recentLogs, newLog].slice(-MAX_LOGS);
+  // MUTATE the existing array instead of reassigning it
+  // This prevents the 'slice of undefined' error
+  recentLogs.unshift(newLog);
+  if (recentLogs.length > MAX_LOGS) {
+    recentLogs.pop();
+  }
+
   triggerUpdate();
 }
 
@@ -108,7 +84,10 @@ export function getRecentLogs() {
   return recentLogs;
 }
 
-// MOVED DOWN: Now safe because variables above are defined
+// ==========================================
+// 3. INTERNAL HELPERS
+// ==========================================
+
 function handleShiftSuccess() {
   if (reactorState.intervalId) {
     clearInterval(reactorState.intervalId);
@@ -117,13 +96,17 @@ function handleShiftSuccess() {
   
   reactorState.isActive = false;
 
+  // This call is now safe because the function is defined above
   logSignificantEvent("REACTOR STABILIZED: SHIFT COMPLETE");
-  playSuccessChime();
+  
+  // Play sound directly here if needed, or via App
+  console.log("AUDIO: Success chime triggered");
 
   if (callbacks && callbacks.onUpdate) {
     callbacks.onUpdate({ 
       ...reactorState, 
-      hazardState: typeof hazardState !== 'undefined' ? hazardState : {}, 
+      hazardState,
+      recentLogs, // Pass the array explicitly
       isComplete: true, 
       success: true 
     });
@@ -137,13 +120,26 @@ function triggerUpdate() {
 }
 
 // ==========================================
-// 4. CORE SIMULATION FUNCTIONS
+// 4. AUDIO HOOKS (Mock or Real)
+// ==========================================
+export function playHazardSound() { console.log("AUDIO: Hazard sound triggered"); }
+export function playLowPowerHum() { console.log("AUDIO: Low power hum triggered"); }
+export function playMetalCreak() { console.log("AUDIO: Metal creak triggered"); }
+export function playSuccessChime() { console.log("AUDIO: Success chime triggered"); }
+export function playImplosionSound() { console.log("AUDIO: IMPLOSION sound triggered"); }
+export function playLowFrequencyAlarm() { console.log("AUDIO: Low Frequency Alarm"); }
+export function playStaticNoise() { console.log("AUDIO: Static Noise Loop"); }
+
+// ==========================================
+// 5. CORE EXPORTS
 // ==========================================
 
 export function initializeReactor(rank = 'Novice', upgrades = [], initialHullIntegrity = 100, config = {}) {
   const shiftDuration = config.duration || 300;
 
+  // Reset State
   reactorState = {
+    ...reactorState,
     temperature: 30,
     pressure: 30,
     containment: 30,
@@ -166,7 +162,10 @@ export function initializeReactor(rank = 'Novice', upgrades = [], initialHullInt
 
   resetCriticalTimers();
   showPurgeButton = false;
-  recentLogs = []; // Reset logs to empty array
+  
+  // CLEARS log array without breaking the reference
+  recentLogs.length = 0; 
+  
   lastStatusLogTime = Date.now();
   
   logSignificantEvent(`SHIFT STARTED: ${shiftDuration}s GOAL`);
@@ -179,9 +178,7 @@ export function startReactorLoop(onUpdate, onCritical) {
   callbacks.onUpdate = onUpdate;
   callbacks.onCritical = onCritical;
   
-  if (reactorState.intervalId) {
-    clearInterval(reactorState.intervalId);
-  }
+  if (reactorState.intervalId) clearInterval(reactorState.intervalId);
   
   reactorState.intervalId = setInterval(() => {
     updateReactor(0.5); 
@@ -194,11 +191,12 @@ export function updateReactor(deltaTime) {
   reactorState.survivalTime += deltaTime;
   reactorState.elapsedTime += deltaTime;
 
-  // WIN CONDITION
+  // --- WIN CONDITION CHECK ---
   if (reactorState.elapsedTime >= reactorState.shiftDuration) {
     handleShiftSuccess();
     return reactorState;
   }
+  // ---------------------------
 
   updateDriftRates(deltaTime);
   
@@ -206,17 +204,17 @@ export function updateReactor(deltaTime) {
   const rankMultipliers = { 'Novice': 1.0, 'Technician': 1.2, 'Engineer': 1.4, 'Master': 1.6, 'Overseer': 1.8, 'Abyssal Architect': 2.0 };
   const rankMultiplier = rankMultipliers[reactorState.rank] || 1.0;
   
-  let baseTempDrift = 0.8 * timeMultiplier * rankMultiplier;
-  let basePressDrift = 0.7 * timeMultiplier * rankMultiplier;
-  let baseContDrift = 0.6 * timeMultiplier * rankMultiplier;
+  let bT = 0.8 * timeMultiplier * rankMultiplier * driftMultipliers.temperature;
+  let bP = 0.7 * timeMultiplier * rankMultiplier * driftMultipliers.pressure;
+  let bC = 0.6 * timeMultiplier * rankMultiplier * driftMultipliers.containment;
   
-  if (reactorState.upgrades.includes('Super-Coolant')) baseTempDrift *= 0.8;
-  if (reactorState.upgrades.includes('Hardened Seals')) basePressDrift *= 0.8;
-  if (reactorState.upgrades.includes('Magnetics Stabilizer')) baseContDrift *= 0.8;
+  if (reactorState.upgrades.includes('Super-Coolant')) bT *= 0.8;
+  if (reactorState.upgrades.includes('Hardened Seals')) bP *= 0.8;
+  if (reactorState.upgrades.includes('Magnetics Stabilizer')) bC *= 0.8;
   
-  reactorState.temperature = Math.min(100, reactorState.temperature + (baseTempDrift * driftMultipliers.temperature));
-  reactorState.pressure = Math.min(100, reactorState.pressure + (basePressDrift * driftMultipliers.pressure));
-  reactorState.containment = Math.min(100, reactorState.containment + (baseContDrift * driftMultipliers.containment));
+  reactorState.temperature = Math.min(100, reactorState.temperature + bT);
+  reactorState.pressure = Math.min(100, reactorState.pressure + bP);
+  reactorState.containment = Math.min(100, reactorState.containment + bC);
   
   updateCriticalTimers(deltaTime);
   checkNominalStatus(deltaTime);
@@ -239,14 +237,12 @@ export function updateReactor(deltaTime) {
 }
 
 // ==========================================
-// 5. HAZARDS & CONTROLS (UNCHANGED LOGIC)
+// 6. CONTROL & HAZARD LOGIC
 // ==========================================
 
 export function togglePause(shouldPause) {
   reactorState.isPaused = shouldPause;
-  if (shouldPause) {
-    playStaticNoise();
-  }
+  if (shouldPause) playStaticNoise();
   triggerUpdate();
 }
 
@@ -256,10 +252,9 @@ export function checkNominalStatus(deltaTime) {
   const isContNominal = reactorState.containment >= 40 && reactorState.containment <= 60;
 
   if (isTempNominal && isPressNominal && isContNominal) {
-    const now = Date.now();
-    if (now - lastStatusLogTime > NOMINAL_LOG_INTERVAL) {
+    if (Date.now() - lastStatusLogTime > NOMINAL_LOG_INTERVAL) {
       logSignificantEvent("STATUS: NOMINAL");
-      lastStatusLogTime = now;
+      lastStatusLogTime = Date.now();
       return true;
     }
   }
@@ -268,7 +263,6 @@ export function checkNominalStatus(deltaTime) {
 
 export function applyControl(controlType, isAligned = false) {
   if (reactorState.isPaused) return 0;
-
   const reduction = Math.floor(Math.random() * 11) + 5;
   updateControlAlignment(controlType, isAligned);
 
@@ -277,7 +271,6 @@ export function applyControl(controlType, isAligned = false) {
     case 'INJECT_COOLANT': reactorState.temperature = Math.max(0, reactorState.temperature - reduction); break;
     case 'STABILIZE_MAGNETICS': reactorState.containment = Math.max(0, reactorState.containment - reduction); break;
   }
-  
   triggerUpdate();
   return reduction;
 }
@@ -315,7 +308,7 @@ export function stopReactorLoop() {
   reactorState.isActive = false;
 }
 
-// --- Hazard System Implementations ---
+// --- HAZARDS ---
 
 export function initializeHazardSystem() {
   hazardState = { trenchLightning: false, heavyCurrent: false, deepSeaEntity: false, jammedSlider: null };
@@ -407,8 +400,6 @@ export function stopHazardSystem() {
   activeHazardTimers = [];
   if (hazardIntervalId) clearInterval(hazardIntervalId);
 }
-
-// --- Emergency Purge System ---
 
 export function triggerEmergencyPurge() {
   if (!reactorState.isActive || reactorState.isPaused) return false;
