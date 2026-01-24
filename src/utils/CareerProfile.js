@@ -26,7 +26,7 @@ const UPGRADES = {
   'Reinforced Glass': {
     cost: 150,
     description: 'Reduces visual distortion during hazards (Stacks)'
-  }
+  },
   "Level 2 Clearance": {
     cost: 500,
     description: "Unlocks the Binary Star Reactor. Higher thermal drift but 2x credit base.",
