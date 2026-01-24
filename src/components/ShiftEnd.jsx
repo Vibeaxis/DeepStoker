@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { calculateDepthCredits } from '@/utils/ReactorLogic';
-import { recordShift, addCredits, loadCareer, getRankFromCredits } from '@/utils/CareerProfile'; // Explicitly import recordShift
+import { addCredits, loadCareer } from '@/utils/CareerProfile'; 
 import { CheckCircle, XCircle, Award, Clock, Flame, Droplet, Zap, ShieldAlert, UploadCloud } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { usePlayerProfile } from '@/hooks/usePlayerProfile';
@@ -13,13 +11,19 @@ import PromotionModal from './PromotionModal';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }) {
-  const { success, survivalTime, finalState, disasterType, creditsEarned } = shiftData;
+  // --- THE FIX IS HERE ---
+  // If finalState is missing (flat data), use shiftData itself.
+  // This prevents the 'pressure of undefined' crash.
+  const finalState = shiftData.finalState || shiftData;
+
+  const { success, survivalTime, disasterType, creditsEarned } = shiftData;
   const earnedTotal = creditsEarned;
   
-  const avgDanger = (finalState.temperature + finalState.pressure + finalState.containment) / 3;
+  // Now we safely use finalState because we guaranteed it exists above
+  const avgDanger = ((finalState.temperature || 0) + (finalState.pressure || 0) + (finalState.containment || 0)) / 3;
   const isImplosion = disasterType === 'IMPLOSION';
 
-  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, success, error
+  const [syncStatus, setSyncStatus] = useState('idle'); 
   const [syncProgress, setSyncProgress] = useState(0);
   
   const [showPromotion, setShowPromotion] = useState(false);
@@ -30,38 +34,14 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
   const { toast } = useToast();
 
   useEffect(() => {
-    // We rely on the parent App.jsx having already called recordShift and updated the career in local storage
-    // But we need to detect if a promotion happened during that update.
-    // Ideally, App.jsx passes promotion data, but to keep it self-contained or robust:
-    // Let's check current career state.
-    
     const career = loadCareer();
+    // Check for promotion logic
     if (career.lastPromotionRank && career.lastPromotionRank !== career.currentRank) {
-       // A promotion just happened (stored in lastPromotionRank trigger logic)
-       // We should verify if we've already shown it? 
-       // For simplicity, let's assume if lastPromotionRank is set, we show it, then clear it.
-       // However, `recordShift` in App.jsx sets it.
-       
-       // Wait, App.jsx calls recordShift. ShiftEnd receives the result. 
-       // Actually App.jsx does NOT pass promotion info currently.
-       // Let's re-verify logic.
-       
-       // Refactoring: The prompt says "After shift ends... Call recordShift()".
-       // But App.jsx ALREADY called it before rendering this component.
-       // This creates a double-call risk if we call it here again.
-       // HOWEVER, Task 5 says: "Update ShiftEnd.jsx... Call recordShift()...".
-       // This implies shifting responsibility to ShiftEnd or making App.jsx just pass raw data.
-       // Currently App.jsx calls recordShift. I should probably change App.jsx to NOT call recordShift,
-       // OR have ShiftEnd handle the *visuals* based on the career state.
-       
-       // Let's check `career.lastPromotionRank`.
-       if (career.lastPromotionRank && career.lastPromotionRank !== career.currentRank) {
-          setPromotionDetails({
-             oldRank: career.lastPromotionRank,
-             newRank: career.currentRank
-          });
-          setShowPromotion(true);
-       }
+       setPromotionDetails({
+           oldRank: career.lastPromotionRank,
+           newRank: career.currentRank
+       });
+       setShowPromotion(true);
     }
   }, []);
 
@@ -83,7 +63,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
     const dataToSync = {
       callsign: playerProfile.callsign,
       survival_time: Math.max(playerProfile.survival_time, survivalTime),
-      total_credits: career.totalCredits, // Use lifetime credits
+      total_credits: career.totalCredits, 
       current_rank: career.currentRank
     };
 
@@ -109,19 +89,11 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
   };
 
   const handleAcceptPromotion = () => {
-    // Add bonus
     const career = loadCareer();
-    addCredits(career, 1000); // This saves internally
-    
-    // Clear promotion flag (optional, but good practice to avoid showing again)
-    // We don't have a clear function, but lastPromotionRank will equal currentRank next time unless we promote again.
-    // Actually, recordShift sets lastPromotionRank = oldRank. 
-    // We should probably reset it to currentRank or null to indicate "seen".
-    // For now, simpler: just update UI.
+    addCredits(career, 1000); 
     
     career.lastPromotionRank = career.currentRank; 
-    // Manually save this "seen" state if we want, or just rely on next shift overwriting it.
-    // Let's force a save of the bonus.
+    saveCareer(career); // Ensure this state is saved
     
     toast({
       title: "Bonus Received",
@@ -129,11 +101,8 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
     });
     
     setShowPromotion(false);
+    handleSyncData(career); // Sync the updated career
     
-    // Sync again with new bonus credits
-    handleSyncData();
-    
-    // Update parent
     if (onCareerUpdate) onCareerUpdate();
   };
 
@@ -159,7 +128,6 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
           fontFamily: "'Space Mono', monospace"
         }}>
         
-        {/* Implosion visual effect overlay */}
         {isImplosion && (
           <div className="absolute inset-0 bg-black z-0">
              <div className="absolute inset-0 animate-pulse bg-red-900/20"></div>
@@ -195,6 +163,12 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   SHIFT COMPLETE
                 </h1>
                 <p className="text-emerald-300 text-lg">Reactor stabilized successfully</p>
+                {/* NEW: Show Shift Multiplier if it exists */}
+                {shiftData.difficultyMult > 1.0 && (
+                   <div className="mt-2 text-xs font-bold text-orange-400 border border-orange-500/30 inline-block px-2 py-1 rounded bg-orange-950/30 uppercase tracking-widest">
+                      Difficulty Bonus: {shiftData.difficultyMult}x
+                   </div>
+                )}
               </motion.div>
             ) : isImplosion ? (
               <motion.div
@@ -237,7 +211,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
             <div className="bg-emerald-950/50 rounded-lg p-4 border border-emerald-500/30">
               <div className="flex items-center gap-2 mb-2">
                 <Award className="w-5 h-5 text-emerald-400" />
-                <div className="text-sm text-emerald-300">Final Status</div>
+                <div className="text-sm text-emerald-300">Avg Danger</div>
               </div>
               <div className="text-3xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                 {Math.round(avgDanger)}%
@@ -254,7 +228,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   <span className="text-white">Temperature</span>
                 </div>
                 <div className="text-xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  {Math.round(finalState.temperature)}°
+                  {Math.round(finalState.temperature || 0)}°
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -263,7 +237,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   <span className="text-white">Pressure</span>
                 </div>
                 <div className="text-xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  {Math.round(finalState.pressure)} PSI
+                  {Math.round(finalState.pressure || 0)} PSI
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -272,7 +246,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   <span className="text-white">Containment</span>
                 </div>
                 <div className="text-xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  {Math.round(finalState.containment)}%
+                  {Math.round(finalState.containment || 0)}%
                 </div>
               </div>
               <div className="flex items-center justify-between border-t border-emerald-500/20 pt-2 mt-2">
@@ -281,7 +255,7 @@ export default function ShiftEnd({ shiftData, onReturnToCareer, onCareerUpdate }
                   <span className="text-white">Hull Integrity</span>
                 </div>
                 <div className={`text-xl font-bold ${finalState.hullIntegrity < 25 ? 'text-red-500' : 'text-emerald-400'}`} style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  {Math.round(finalState.hullIntegrity)}%
+                  {Math.round(finalState.hullIntegrity || 0)}%
                 </div>
               </div>
             </div>
