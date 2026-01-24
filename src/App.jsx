@@ -7,38 +7,23 @@ import ShiftEnd from '@/components/ShiftEnd';
 import { loadCareer, saveCareer, addCredits, recordShift, updateHullIntegrity } from '@/utils/CareerProfile';
 import { initializeReactor, calculateDepthCredits } from '@/utils/ReactorLogic';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
-// The Title Screen Component
-if (currentScreen === 'title') {
-  return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-black font-orbitron">
-      {/* Background Animated SVG Reactor Core */}
-      <div className="opacity-30 blur-sm absolute inset-0 flex items-center justify-center">
-         <CircleCore color="#10b981" /> 
-      </div>
-      
-      <h1 className="text-7xl font-black text-emerald-500 mb-12 tracking-tighter">DEEP STOKER</h1>
-      
-      <div className="flex flex-col gap-4 z-10">
-        <Button onClick={() => setCurrentScreen('career')} className="w-64 h-12 bg-emerald-600 hover:bg-emerald-500 font-bold">
-          ENTER SYSTEM
-        </Button>
-        <Button onClick={() => setShowSettings(true)} className="w-64 h-12 border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10">
-          CONFIGURATION
-        </Button>
-      </div>
-    </div>
-  );
-}
+
 function App() {
  const [currentScreen, setCurrentScreen] = useState('title');
   const [career, setCareer] = useState(null);
   const [shiftData, setShiftData] = useState(null);
-const [settings, setSettings] = useState(loadSettings());
+// Add a state for the settings overlay toggle
+const [showSettings, setShowSettings] = useState(false);
   useEffect(() => {
     const loadedCareer = loadCareer();
     setCareer(loadedCareer);
   }, []);
-
+// Helper to update settings and save to local storage
+const handleUpdateSettings = (key, value) => {
+  const newSettings = { ...settings, [key]: value };
+  setSettings(newSettings);
+  localStorage.setItem('deep-stoker-settings', JSON.stringify(newSettings));
+};
  const handleStartShift = (shiftType = 'standard') => {
   // 1. Re-load career to ensure fresh state (Keep this!)
   const currentCareer = loadCareer();
@@ -148,7 +133,89 @@ const [settings, setSettings] = useState(loadSettings());
           onCareerUpdate={handleCareerUpdate}
         />
       )}
+      {/* Title Screen Branch */}
+{currentScreen === 'title' && (
+  <div className="relative h-screen w-full flex flex-col items-center justify-center bg-black overflow-hidden font-orbitron">
+    {/* Background Ambient Visual */}
+    <div className="absolute inset-0 opacity-20 pointer-events-none">
+      <div className="w-full h-full bg-[radial-gradient(circle_at_center,_#10b981_0%,_transparent_70%)] animate-pulse" />
+    </div>
+
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="z-10 text-center"
+    >
+      <h1 className="text-7xl font-black text-emerald-500 mb-2 tracking-tighter drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+        DEEP STOKER
+      </h1>
+      <p className="text-emerald-300/60 text-xs tracking-[0.5em] mb-12 uppercase">Sub-Oceanic Fusion Management</p>
       
+      <div className="flex flex-col gap-4 items-center">
+        <button 
+          onClick={() => setCurrentScreen('career')}
+          className="w-64 h-14 bg-emerald-600 hover:bg-emerald-400 text-black font-black text-lg skew-x-[-10deg] transition-all hover:scale-105"
+        >
+          ENTER SYSTEM
+        </button>
+        
+        <button 
+          onClick={() => setShowSettings(true)}
+          className="w-64 h-12 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 font-bold text-sm tracking-widest"
+        >
+          CONFIGURATION
+        </button>
+      </div>
+    </motion.div>
+  </div>
+)}
+
+{/* Settings Overlay - Global across any screen */}
+{showSettings && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-6 font-space-mono">
+    <div className="bg-emerald-950 border-2 border-emerald-500 p-8 rounded-sm max-w-md w-full relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 animate-pulse" />
+      
+      <h2 className="text-2xl font-black text-emerald-400 mb-8 font-orbitron tracking-tighter uppercase">System Config</h2>
+      
+      <div className="space-y-8 mb-10">
+        <div className="flex justify-between items-center">
+          <div>
+            <div className="text-emerald-400 font-bold text-xs uppercase">Audio Resonance</div>
+            <div className="text-[10px] text-emerald-300/50">Subtle reactor thrumming</div>
+          </div>
+          <button 
+            onClick={() => handleUpdateSettings('enableAudio', !settings.enableAudio)}
+            className={`px-6 py-1 border-2 font-black text-xs ${settings.enableAudio ? 'bg-emerald-500 text-black border-emerald-500' : 'text-emerald-500 border-emerald-500/30'}`}
+          >
+            {settings.enableAudio ? 'ACTIVE' : 'MUTED'}
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs font-bold text-emerald-400">
+            <span>VISUAL SWAY INTENSITY</span>
+            <span>{settings.shakeIntensity}%</span>
+          </div>
+          <input 
+            type="range" 
+            min="0" max="100" 
+            value={settings.shakeIntensity}
+            onChange={(e) => handleUpdateSettings('shakeIntensity', e.target.value)}
+            className="w-full accent-emerald-500 bg-emerald-900 h-1 appearance-none"
+          />
+        </div>
+      </div>
+      
+      <button 
+        onClick={() => setShowSettings(false)}
+        className="w-full py-3 bg-emerald-500 text-black font-black hover:bg-white transition-colors uppercase text-sm"
+      >
+        Confirm Changes
+      </button>
+    </div>
+  </div>
+)}
       <Toaster />
     </AuthProvider>
   );
