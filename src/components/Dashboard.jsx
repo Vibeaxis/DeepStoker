@@ -528,7 +528,8 @@ const handleWipe = () => {
     </div>
   </div>
 </div>
-         {/* Reactor Container */}
+
+{/* === REACTOR CONTAINER === */}
 <div className={`relative transition-transform duration-500 ${state.hazardState.heavyCurrent ? 'animate-sway' : ''}`}>
   
   {state.hazardState.deepSeaEntity && (
@@ -536,7 +537,8 @@ const handleWipe = () => {
   )}
   
   <div className="relative z-20 flex items-center justify-center">
-    {/* Emergency Button overlay */}
+    
+    {/* Emergency Button Positioned Above */}
     <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-50">
         <EmergencyPurgeButton 
           show={state.showPurgeButton} 
@@ -544,73 +546,127 @@ const handleWipe = () => {
         />
     </div>
 
-    <motion.div
-  className={`reactor-core relative flex items-center justify-center ${getCoreColor()}`}
-  animate={!state.isPaused ? {
-    scale: avgDanger > 85 ? [1, 1.15, 1] : [1, 1.05, 1],
-    filter: [
-      `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
-      `drop-shadow(0 0 50px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
-      `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`
-    ]
-  } : {}}
-  transition={{
-    duration: avgDanger > 85 ? 0.5 : avgDanger > 60 ? 1 : 2,
-    repeat: Infinity,
-    ease: "easeInOut"
-  }}
->
-  {/* LEVEL 2 OVERLAY: This renders the Star BEHIND the text if level 2 is active */}
-  {state.reactorType === 'star' && (
-    <div className="absolute inset-0 pointer-events-none opacity-60">
-      <svg viewBox="0 0 100 100" className="w-full h-full p-2">
-        <motion.polygon
-          points="50,5 61,35 95,35 67,57 78,91 50,70 22,91 33,57 5,35 39,35"
-          fill="none"
-          stroke="white"
-          strokeWidth="1.5"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-        />
-      </svg>
-    </div>
-  )}
-      
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-        {/* Main Danger Number with Heavy Outline for Pop */}
-        <div 
-          className={`text-4xl font-black mb-1 ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
-          style={{ 
-            textShadow: '0 0 10px rgba(0,0,0,0.8), -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000' 
-          }}
-        >
-          {Math.round(avgDanger)}
-        </div>
-        <div className="text-[10px] font-bold opacity-90 mb-2 tracking-widest" style={{ textShadow: '1px 1px 2px #000' }}>STATUS</div>
-        
-        {/* Stats inside Orb with increased visibility */}
-        <div className="space-y-1 text-left w-full px-6 leading-none">
-          <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-            <span className="opacity-70">T:</span>
-            <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>
-              {Math.round(state.temperature)}°
-            </span>
-          </div>
-          <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-            <span className="opacity-70">P:</span>
-            <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>
-              {Math.round(state.pressure)}
-            </span>
-          </div>
-          <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-            <span className="opacity-70">C:</span>
-            <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>
-              {Math.round(state.containment)}%
-            </span>
-          </div>
-        </div>
+    {/* === CONDITIONAL RENDERING: STAR vs CIRCLE === */}
+    {state.reactorType === 'star' ? (
+      // ==========================
+      // OPTION A: THE STAR REACTOR
+      // ==========================
+      <div className="relative flex items-center justify-center" style={{ width: '38vh', height: '38vh' }}>
+         {/* 1. The Rotating Star Shape (Background) */}
+         <motion.svg 
+            viewBox="0 0 100 100" 
+            className="absolute inset-0 w-full h-full"
+            style={{ 
+              filter: `drop-shadow(0 0 30px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})` 
+            }}
+            animate={{ 
+               rotate: !state.isPaused ? 360 : 0,
+               scale: !state.isPaused && avgDanger > 85 ? [1, 1.1, 1] : 1
+            }}
+            transition={{ 
+               rotate: { duration: 25, ease: "linear", repeat: Infinity },
+               scale: { duration: 0.5, repeat: Infinity }
+            }}
+         >
+            <defs>
+              <radialGradient id="starBlue" cx="50%" cy="50%" r="50%">
+                 <stop offset="0%" stopColor="#60a5fa" />
+                 <stop offset="100%" stopColor="#1e3a8a" />
+              </radialGradient>
+              <radialGradient id="starOrange" cx="50%" cy="50%" r="50%">
+                 <stop offset="0%" stopColor="#fbbf24" />
+                 <stop offset="100%" stopColor="#7c2d12" />
+              </radialGradient>
+              <radialGradient id="starRed" cx="50%" cy="50%" r="50%">
+                 <stop offset="0%" stopColor="#f87171" />
+                 <stop offset="100%" stopColor="#7f1d1d" />
+              </radialGradient>
+            </defs>
+            
+            {/* The Solid Star Polygon */}
+            <polygon 
+               points="50,5 61,35 95,35 67,57 78,91 50,70 22,91 33,57 5,35 39,35"
+               fill={`url(#star${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
+               stroke="white"
+               strokeWidth="1.5"
+               strokeOpacity="0.8"
+            />
+         </motion.svg>
+         
+         {/* 2. The Text Overlay (Stationary) */}
+         <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            <div 
+              className={`text-4xl font-black mb-1 ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
+              style={{ textShadow: '0 0 10px rgba(0,0,0,0.8), 2px 2px 0 #000' }}
+            >
+              {Math.round(avgDanger)}
+            </div>
+            <div className="text-[10px] font-bold opacity-90 mb-2 tracking-widest" style={{ textShadow: '1px 1px 2px #000' }}>STATUS</div>
+            
+            <div className="space-y-1 text-left w-full px-12 leading-none">
+              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-70">T:</span>
+                <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.temperature)}°</span>
+              </div>
+              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-70">P:</span>
+                <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.pressure)}</span>
+              </div>
+              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-70">C:</span>
+                <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.containment)}%</span>
+              </div>
+            </div>
+         </div>
       </div>
-    </motion.div>
+
+    ) : (
+      
+      // ==========================
+      // OPTION B: THE CIRCLE REACTOR (CLASSIC)
+      // ==========================
+      <motion.div
+        className={`reactor-core relative flex items-center justify-center ${getCoreColor()}`}
+        animate={!state.isPaused ? {
+          scale: avgDanger > 85 ? [1, 1.15, 1] : [1, 1.05, 1],
+          filter: [
+            `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
+            `drop-shadow(0 0 50px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
+            `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`
+          ]
+        } : {}}
+        transition={{
+          duration: avgDanger > 85 ? 0.5 : avgDanger > 60 ? 1 : 2,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      >
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            <div 
+              className={`text-4xl font-black mb-1 ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
+              style={{ textShadow: '0 0 10px rgba(0,0,0,0.8), -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000' }}
+            >
+              {Math.round(avgDanger)}
+            </div>
+            <div className="text-[10px] font-bold opacity-90 mb-2 tracking-widest" style={{ textShadow: '1px 1px 2px #000' }}>STATUS</div>
+            
+            <div className="space-y-1 text-left w-full px-6 leading-none">
+              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-70">T:</span>
+                <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.temperature)}°</span>
+              </div>
+              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-70">P:</span>
+                <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.pressure)}</span>
+              </div>
+              <div className="flex justify-between text-[11px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                <span className="opacity-70">C:</span>
+                <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.containment)}%</span>
+              </div>
+            </div>
+          </div>
+      </motion.div>
+    )}
   </div>
 </div>
         </div>
