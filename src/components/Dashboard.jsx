@@ -19,7 +19,73 @@ import {
   togglePause
 } from '@/utils/ReactorLogic';
 import { Button } from '@/components/ui/button';
+// ---------------------------------------------------------
+// 1. DEFINE HOOK OUTSIDE THE COMPONENT (Or in a separate file)
+// ---------------------------------------------------------
+const useReactorAudio = (avgDanger, isActive, isPaused) => {
+  const audioCtxRef = useRef(null);
+  const oscRef = useRef(null);
+  const gainRef = useRef(null);
 
+  // Setup Effect
+  useEffect(() => {
+    if (!isActive || isPaused) {
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close();
+        audioCtxRef.current = null;
+      }
+      return;
+    }
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    audioCtxRef.current = ctx;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    // --- AUDIBILITY FIXES ---
+    osc.type = 'triangle'; // Triangles cut through mixes better
+    filter.type = 'lowpass';
+    
+    // CHANGED: Raised filter from 200 to 800 so you can actually hear it
+    filter.frequency.value = 800; 
+    
+    // CHANGED: Bumped start volume from 0.05 to 0.1
+    gain.gain.value = 0.1; 
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    oscRef.current = osc;
+    gainRef.current = gain;
+
+    if (ctx.state === 'suspended') ctx.resume();
+
+    return () => {
+      if (ctx.state !== 'closed') ctx.close();
+      audioCtxRef.current = null;
+    };
+  }, [isActive, isPaused]);
+
+  // Modulation Effect
+  useEffect(() => {
+    if (!audioCtxRef.current || !oscRef.current) return;
+    const ctx = audioCtxRef.current;
+    
+    // CHANGED: Base frequency 60 -> 120. 
+    // 60Hz is invisible on laptops. 120Hz is a low hum.
+    const targetFreq = 120 + (avgDanger * 2); 
+    oscRef.current.frequency.setTargetAtTime(targetFreq, ctx.currentTime, 0.1);
+
+    const targetVol = 0.1 + (avgDanger > 80 ? 0.1 : 0);
+    gainRef.current.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1);
+    
+  }, [avgDanger]);
+};
 const SHIFT_DURATION = 300; // 5 minutes in seconds
 
 const REACTOR_CORE_STYLES = `
@@ -271,77 +337,7 @@ export default function Dashboard({ career, onShiftEnd }) {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-  const useReactorAudio = (avgDanger, isActive, isPaused) => {
-  const audioCtxRef = useRef(null);
-  const oscRef = useRef(null);
-  const gainRef = useRef(null);
 
-  // EFFECT 1: Setup and Teardown (Only runs when Shift starts/stops)
-  useEffect(() => {
-    if (!isActive || isPaused) {
-      // Cleanup: Stop sound if we pause or end shift
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close();
-        audioCtxRef.current = null;
-      }
-      return;
-    }
-
-    // 1. Initialize Audio Context
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioContext();
-    audioCtxRef.current = ctx;
-
-    // 2. Create Nodes
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-
-    // 3. Configuration
-    // using 'triangle' for now so you can hear it on laptop speakers (sine is too deep/quiet)
-    osc.type = 'triangle'; 
-    filter.type = 'lowpass';
-    filter.frequency.value = 200; // Let a little more sound through
-    gain.gain.value = 0.05; // Starting volume
-
-    // 4. Wiring: Oscillator -> Filter -> Gain -> Speakers
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    // 5. Ignition
-    osc.start();
-    oscRef.current = osc;
-    gainRef.current = gain;
-
-    // Browser Autoplay Fix: Force resume if suspended
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
-
-    return () => {
-      if (ctx.state !== 'closed') ctx.close();
-      audioCtxRef.current = null;
-    };
-  }, [isActive, isPaused]); // dependency array NO LONGER includes avgDanger
-
-  // EFFECT 2: Modulation (Runs constantly to change pitch)
-  useEffect(() => {
-    if (!audioCtxRef.current || !oscRef.current) return;
-
-    const ctx = audioCtxRef.current;
-    
-    // Smoothly ramp frequency to avoid "popping" clicks
-    // Base 60Hz + Danger. (Raised base pitch so you can verify it works)
-    const targetFreq = 60 + (avgDanger * 0.5); 
-    oscRef.current.frequency.setTargetAtTime(targetFreq, ctx.currentTime, 0.1);
-
-    // Optional: Get louder as danger increases
-    const targetVol = 0.05 + (avgDanger > 80 ? 0.05 : 0);
-    gainRef.current.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1);
-    
-  }, [avgDanger]); // This effect ONLY updates the parameters, doesn't rebuild engine
-};
 const [fogLevel, setFogLevel] = useState(0); // 0 to 100
 
 useEffect(() => {
