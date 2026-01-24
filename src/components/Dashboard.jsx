@@ -191,7 +191,7 @@ const BinaryStarCore = ({ color, danger }) => (
     />
   </svg>
 );
-export default function Dashboard({ career, onShiftEnd }) {
+export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
   const initialState = getReactorState();
   const [state, setState] = useState({
     temperature: 30,
@@ -297,12 +297,17 @@ export default function Dashboard({ career, onShiftEnd }) {
     togglePause(true);
   };
 
+ // We change handleResume to be used by the menu
   const handleResume = () => {
     togglePause(false);
     setResumeFlicker(true);
     setTimeout(() => setResumeFlicker(false), 500);
   };
-  
+  // New: Handle Quitting early
+  const handleAbortShift = () => {
+     // Trigger a failure/end shift manually
+     handleShiftEnd(false, 'ABORTED');
+  };
   const handleVentPressure = (value, isAligned) => {
     setVentValue(value);
     applyControl('VENT_PRESSURE', isAligned);

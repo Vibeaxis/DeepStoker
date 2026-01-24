@@ -10,13 +10,15 @@ import { AuthProvider } from '@/contexts/SupabaseAuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 
-// Add this helper function outside the App component
+// 1. UPDATED SETTINGS LOADER
 const loadSettings = () => {
   const saved = localStorage.getItem('deep-stoker-settings');
   return saved ? JSON.parse(saved) : {
     enableAudio: true,
     shakeIntensity: 50,
-    masterVolume: 0.7
+    masterVolume: 0.7,
+    gamma: 1.0,      // New: Brightness (0.5 to 1.5)
+    uiScale: 100     // New: Font/UI size percentage (80 to 120)
   };
 };
 
@@ -153,114 +155,127 @@ const handleShiftEnd = (data) => {
     );
   }
 
-  return (
+ return (
     <AuthProvider>
-      {currentScreen === 'career' && (
-        <CareerScreen 
-          career={career} 
-          onStartShift={handleStartShift}
-          onCareerUpdate={handleCareerUpdate}
-        />
-      )}
-      
-      {currentScreen === 'shift' && (
-        <Dashboard 
-          career={career}
-          onShiftEnd={handleShiftEnd}
-        />
-      )}
-      
-      {currentScreen === 'shift-end' && shiftData && (
-        <ShiftEnd 
-          shiftData={shiftData}
-          onReturnToCareer={handleReturnToCareer}
-          onCareerUpdate={handleCareerUpdate}
-        />
-      )}
-      {/* Title Screen Branch */}
-{currentScreen === 'title' && (
-  <div className="relative h-screen w-full flex flex-col items-center justify-center bg-black overflow-hidden font-orbitron">
-    {/* Background Ambient Visual */}
-    <div className="absolute inset-0 opacity-20 pointer-events-none">
-      <div className="w-full h-full bg-[radial-gradient(circle_at_center,_#10b981_0%,_transparent_70%)] animate-pulse" />
-    </div>
-
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="z-10 text-center"
-    >
-      <h1 className="text-7xl font-black text-emerald-500 mb-2 tracking-tighter drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
-        DEEP STOKER
-      </h1>
-      <p className="text-emerald-300/60 text-xs tracking-[0.5em] mb-12 uppercase">Sub-Oceanic Fusion Management</p>
-      
-      <div className="flex flex-col gap-4 items-center">
-        <button 
-          onClick={() => setCurrentScreen('career')}
-          className="w-64 h-14 bg-emerald-600 hover:bg-emerald-400 text-black font-black text-lg skew-x-[-10deg] transition-all hover:scale-105"
-        >
-          ENTER SYSTEM
-        </button>
+      {/* WRAP EVERYTHING IN A DIV THAT APPLIES SETTINGS */}
+      <div className="min-h-screen w-full transition-all duration-300" style={appStyles}>
         
-        <button 
-          onClick={() => setShowSettings(true)}
-          className="w-64 h-12 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 font-bold text-sm tracking-widest"
-        >
-          CONFIGURATION
-        </button>
-      </div>
-    </motion.div>
-  </div>
-)}
-
-{/* Settings Overlay - Global across any screen */}
-{showSettings && (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-6 font-space-mono">
-    <div className="bg-emerald-950 border-2 border-emerald-500 p-8 rounded-sm max-w-md w-full relative">
-      <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 animate-pulse" />
-      
-      <h2 className="text-2xl font-black text-emerald-400 mb-8 font-orbitron tracking-tighter uppercase">System Config</h2>
-      
-      <div className="space-y-8 mb-10">
-        <div className="flex justify-between items-center">
-          <div>
-            <div className="text-emerald-400 font-bold text-xs uppercase">Audio Resonance</div>
-            <div className="text-[10px] text-emerald-300/50">Subtle reactor thrumming</div>
-          </div>
-          <button 
-            onClick={() => handleUpdateSettings('enableAudio', !settings.enableAudio)}
-            className={`px-6 py-1 border-2 font-black text-xs ${settings.enableAudio ? 'bg-emerald-500 text-black border-emerald-500' : 'text-emerald-500 border-emerald-500/30'}`}
-          >
-            {settings.enableAudio ? 'ACTIVE' : 'MUTED'}
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-bold text-emerald-400">
-            <span>VISUAL SWAY INTENSITY</span>
-            <span>{settings.shakeIntensity}%</span>
-          </div>
-          <input 
-            type="range" 
-            min="0" max="100" 
-            value={settings.shakeIntensity}
-            onChange={(e) => handleUpdateSettings('shakeIntensity', e.target.value)}
-            className="w-full accent-emerald-500 bg-emerald-900 h-1 appearance-none"
+        {currentScreen === 'career' && (
+          <CareerScreen 
+            career={career} 
+            onStartShift={handleStartShift}
+            onCareerUpdate={handleCareerUpdate}
           />
-        </div>
+        )}
+        
+        {currentScreen === 'shift' && (
+          <Dashboard 
+            career={career}
+            onShiftEnd={handleShiftEnd}
+            // PASS SETTINGS TRIGGER DOWN
+            onOpenSettings={() => setShowSettings(true)}
+          />
+        )}
+        
+        {currentScreen === 'shift-end' && shiftData && (
+          <ShiftEnd 
+            shiftData={shiftData}
+            onReturnToCareer={handleReturnToCareer}
+            onCareerUpdate={handleCareerUpdate}
+          />
+        )}
+
+        {/* Title Screen Branch */}
+        {currentScreen === 'title' && (
+           /* ... Your Title Screen Code ... */
+           <div className="relative h-screen w-full flex flex-col items-center justify-center bg-black font-orbitron">
+             <h1 className="text-6xl text-emerald-500 mb-8">DEEP STOKER</h1>
+             <button onClick={() => setCurrentScreen('career')} className="px-8 py-4 bg-emerald-600 text-black font-bold mb-4">ENTER</button>
+             <button onClick={() => setShowSettings(true)} className="text-emerald-500 border-b border-emerald-500">CONFIG</button>
+           </div>
+        )}
+
+        {/* 3. UPDATED SETTINGS OVERLAY */}
+        {showSettings && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-6 font-space-mono">
+            <div className="bg-emerald-950 border-2 border-emerald-500 p-8 rounded-sm max-w-md w-full relative shadow-[0_0_50px_rgba(16,185,129,0.2)]">
+              <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 animate-pulse" />
+              
+              <h2 className="text-2xl font-black text-emerald-400 mb-8 font-orbitron tracking-tighter uppercase">System Config</h2>
+              
+              <div className="space-y-8 mb-10 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                
+                {/* Audio */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-emerald-400 font-bold text-xs uppercase">Audio Resonance</div>
+                    <div className="text-[10px] text-emerald-300/50">Reactor thrumming</div>
+                  </div>
+                  <button 
+                    onClick={() => handleUpdateSettings('enableAudio', !settings.enableAudio)}
+                    className={`px-4 py-1 border-2 font-black text-xs ${settings.enableAudio ? 'bg-emerald-500 text-black border-emerald-500' : 'text-emerald-500 border-emerald-500/30'}`}
+                  >
+                    {settings.enableAudio ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+
+                {/* Shake */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-emerald-400">
+                    <span>SCREEN SHAKE</span>
+                    <span>{settings.shakeIntensity}%</span>
+                  </div>
+                  <input 
+                    type="range" min="0" max="100" 
+                    value={settings.shakeIntensity}
+                    onChange={(e) => handleUpdateSettings('shakeIntensity', e.target.value)}
+                    className="w-full accent-emerald-500 bg-emerald-900 h-1 appearance-none"
+                  />
+                </div>
+
+                {/* Gamma Correction */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-emerald-400">
+                    <span>GAMMA CORRECTION</span>
+                    <span>{Math.round(settings.gamma * 100)}%</span>
+                  </div>
+                  <div className="text-[10px] text-emerald-300/50 mb-1">Adjust visibility in deep waters</div>
+                  <input 
+                    type="range" min="0.5" max="1.5" step="0.1"
+                    value={settings.gamma}
+                    onChange={(e) => handleUpdateSettings('gamma', parseFloat(e.target.value))}
+                    className="w-full accent-emerald-500 bg-emerald-900 h-1 appearance-none"
+                  />
+                </div>
+
+                {/* UI Scale */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-emerald-400">
+                    <span>UI SCALING</span>
+                    <span>{settings.uiScale}%</span>
+                  </div>
+                  <div className="text-[10px] text-emerald-300/50 mb-1">Resize text and controls</div>
+                  <input 
+                    type="range" min="80" max="120" step="5"
+                    value={settings.uiScale}
+                    onChange={(e) => handleUpdateSettings('uiScale', parseInt(e.target.value))}
+                    className="w-full accent-emerald-500 bg-emerald-900 h-1 appearance-none"
+                  />
+                </div>
+
+              </div>
+              
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="w-full py-3 bg-emerald-500 text-black font-black hover:bg-white transition-colors uppercase text-sm skew-x-[-10deg]"
+              >
+                Apply & Return
+              </button>
+            </div>
+          </div>
+        )}
+        <Toaster />
       </div>
-      
-      <button 
-        onClick={() => setShowSettings(false)}
-        className="w-full py-3 bg-emerald-500 text-black font-black hover:bg-white transition-colors uppercase text-sm"
-      >
-        Confirm Changes
-      </button>
-    </div>
-  </div>
-)}
-      <Toaster />
     </AuthProvider>
   );
 }
