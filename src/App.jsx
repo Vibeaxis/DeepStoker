@@ -18,12 +18,29 @@ function App() {
     setCareer(loadedCareer);
   }, []);
 
-  const handleStartShift = () => {
-    // Re-load career to ensure fresh state
-    const currentCareer = loadCareer();
-    initializeReactor(currentCareer.currentRank, currentCareer.upgrades, currentCareer.hullIntegrity);
-    setCurrentScreen('shift');
-  };
+ const handleStartShift = (shiftType = 'standard') => {
+  // 1. Re-load career to ensure fresh state (Keep this!)
+  const currentCareer = loadCareer();
+
+  // 2. Define our new Shift/Level logic
+  const shiftDurations = { quick: 180, standard: 300, deep: 600 };
+  const isLevel2 = currentCareer.upgrades.includes("Level 2 Clearance");
+
+  // 3. Update the initialize call to handle the new "Level 2" Star reactor
+  // We pass the shift duration and the reactor type (Star vs Circle)
+  initializeReactor(
+    currentCareer.currentRank, 
+    currentCareer.upgrades, 
+    currentCareer.hullIntegrity,
+    {
+      duration: shiftDurations[shiftType],
+      reactorType: isLevel2 ? 'star' : 'circle', // THE LEVEL 2 TOGGLE
+      difficultyMult: shiftType === 'deep' ? 3.0 : 1.0
+    }
+  );
+
+  setCurrentScreen('shift');
+};
 
   const handleShiftEnd = (data) => {
     const creditsCalc = calculateDepthCredits();

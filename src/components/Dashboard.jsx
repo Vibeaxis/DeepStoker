@@ -101,7 +101,29 @@ const REACTOR_CORE_STYLES = `
     animation-play-state: paused !important;
   }
 `;
-
+const BinaryStarCore = ({ color, danger }) => (
+  <svg viewBox="0 0 100 100" className="w-full h-full p-4">
+    {/* Outer Glow Star */}
+    <motion.polygon
+      points="50,5 61,35 95,35 67,57 78,91 50,70 22,91 33,57 5,35 39,35"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      animate={{ 
+        rotate: 360,
+        scale: danger > 85 ? [1, 1.2, 1] : [1, 1.05, 1] 
+      }}
+      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+    />
+    {/* Inner Pulsing Core */}
+    <motion.circle 
+      cx="50" cy="50" r="15" 
+      fill={color} 
+      animate={{ opacity: [0.4, 0.8, 0.4] }}
+      transition={{ duration: 1, repeat: Infinity }}
+    />
+  </svg>
+);
 export default function Dashboard({ career, onShiftEnd }) {
   const [state, setState] = useState({
     temperature: 30,
@@ -451,21 +473,37 @@ const handleWipe = () => {
     </div>
 
     <motion.div
-      className={`reactor-core ${getCoreColor()}`}
-      animate={!state.isPaused ? {
-        scale: avgDanger > 85 ? [1, 1.15, 1] : [1, 1.05, 1],
-        filter: [
-          `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
-          `drop-shadow(0 0 50px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
-          `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`
-        ]
-      } : {}}
-      transition={{
-        duration: avgDanger > 85 ? 0.5 : avgDanger > 60 ? 1 : 2,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }}
-    >
+  className={`reactor-core relative flex items-center justify-center ${getCoreColor()}`}
+  animate={!state.isPaused ? {
+    scale: avgDanger > 85 ? [1, 1.15, 1] : [1, 1.05, 1],
+    filter: [
+      `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
+      `drop-shadow(0 0 50px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`,
+      `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})`
+    ]
+  } : {}}
+  transition={{
+    duration: avgDanger > 85 ? 0.5 : avgDanger > 60 ? 1 : 2,
+    repeat: Infinity,
+    ease: "easeInOut"
+  }}
+>
+  {/* LEVEL 2 OVERLAY: This renders the Star BEHIND the text if level 2 is active */}
+  {state.reactorType === 'star' && (
+    <div className="absolute inset-0 pointer-events-none opacity-60">
+      <svg viewBox="0 0 100 100" className="w-full h-full p-2">
+        <motion.polygon
+          points="50,5 61,35 95,35 67,57 78,91 50,70 22,91 33,57 5,35 39,35"
+          fill="none"
+          stroke="white"
+          strokeWidth="1.5"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+        />
+      </svg>
+    </div>
+  )}
+      
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
         {/* Main Danger Number with Heavy Outline for Pop */}
         <div 
