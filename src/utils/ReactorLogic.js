@@ -1,11 +1,11 @@
+// --- Core Reactor Simulation Engine ---
 import { RANKS } from './CareerProfile';
 
 // ==========================================
 // 1. GLOBAL STATE (Stable Memory)
 // ==========================================
 
-// We use CONST for the array to ensure it never becomes 'undefined'
-const recentLogs = []; 
+const recentLogs = []; // Const ensures array always exists (fixes 'slice' error)
 const MAX_LOGS = 6;
 
 let callbacks = { onUpdate: null, onCritical: null };
@@ -25,7 +25,8 @@ let reactorState = {
   upgrades: [],
   shiftDuration: 300,
   reactorType: 'circle',
-  difficultyMult: 1.0
+  difficultyMult: 1.0,
+  timeScale: 1.0 // For "Invert Gravity" mechanic
 };
 
 let hazardState = {
@@ -45,18 +46,17 @@ let hazardIntervalId = null;
 let activeHazardTimers = [];
 
 // ==========================================
-// 2. LOGGING SYSTEM (Must be defined first)
+// 2. LOGGING SYSTEM
 // ==========================================
 
 export function logSignificantEvent(eventName) {
-  // Safety fallback (though const prevents this being needed usually)
   if (!recentLogs) return;
 
   const allowedEvents = [
     "SHIFT STARTED", "STATIONARY STEADY", "PRESSURE ANOMALY", "HAZARD DETECTED", 
     "TRENCH LIGHTNING", "HEAVY CURRENT", "DEEP-SEA ENTITY", "SLIDER JAMMED", 
     "SLIDER UNJAMMED", "EMERGENCY PURGE ACTIVATED", "STATUS: NOMINAL", "DRIFT SPIKE",
-    "REACTOR STABILIZED: SHIFT COMPLETE"
+    "REACTOR STABILIZED: SHIFT COMPLETE", "GRAVITY INVERTED: HYPER-G", "GRAVITY INVERTED: ZERO-G", "GRAVITY NORMALIZED"
   ];
 
   const isAllowed = allowedEvents.includes(eventName) || 
@@ -70,8 +70,6 @@ export function logSignificantEvent(eventName) {
     timestamp: new Date().toLocaleTimeString()
   };
 
-  // MUTATE the existing array instead of reassigning it
-  // This prevents the 'slice of undefined' error
   recentLogs.unshift(newLog);
   if (recentLogs.length > MAX_LOGS) {
     recentLogs.pop();
@@ -96,19 +94,18 @@ function handleShiftSuccess() {
   
   reactorState.isActive = false;
 
-  // This call is now safe because the function is defined above
   logSignificantEvent("REACTOR STABILIZED: SHIFT COMPLETE");
-  
-  // Play sound directly here if needed, or via App
   console.log("AUDIO: Success chime triggered");
 
   if (callbacks && callbacks.onUpdate) {
     callbacks.onUpdate({ 
-      ...reactorState, 
+      ...reactorState,           // Flattened props for Dashboard (prevents rendering crash)
       hazardState,
-      recentLogs, // Pass the array explicitly
+      recentLogs,
       isComplete: true, 
-      success: true 
+      success: true,
+      // CRITICAL FIX: This matches what App.js expects (data.finalState.pressure)
+      finalState: { ...reactorState } 
     });
   }
 }
@@ -120,24 +117,12 @@ function triggerUpdate() {
 }
 
 // ==========================================
-// 4. AUDIO HOOKS (Mock or Real)
-// ==========================================
-export function playHazardSound() { console.log("AUDIO: Hazard sound triggered"); }
-export function playLowPowerHum() { console.log("AUDIO: Low power hum triggered"); }
-export function playMetalCreak() { console.log("AUDIO: Metal creak triggered"); }
-export function playSuccessChime() { console.log("AUDIO: Success chime triggered"); }
-export function playImplosionSound() { console.log("AUDIO: IMPLOSION sound triggered"); }
-export function playLowFrequencyAlarm() { console.log("AUDIO: Low Frequency Alarm"); }
-export function playStaticNoise() { console.log("AUDIO: Static Noise Loop"); }
-
-// ==========================================
-// 5. CORE EXPORTS
+// 4. CORE SIMULATION FUNCTIONS
 // ==========================================
 
 export function initializeReactor(rank = 'Novice', upgrades = [], initialHullIntegrity = 100, config = {}) {
   const shiftDuration = config.duration || 300;
 
-  // Reset State
   reactorState = {
     ...reactorState,
     temperature: 30,
@@ -149,6 +134,7 @@ export function initializeReactor(rank = 'Novice', upgrades = [], initialHullInt
     shiftDuration: shiftDuration,
     reactorType: config.reactorType || 'circle',
     difficultyMult: config.difficultyMult || 1.0,
+    timeScale: 1.0,
     isActive: true,
     isPaused: false,
     intervalId: null,
@@ -163,7 +149,7 @@ export function initializeReactor(rank = 'Novice', upgrades = [], initialHullInt
   resetCriticalTimers();
   showPurgeButton = false;
   
-  // CLEARS log array without breaking the reference
+  // Clear logs safely
   recentLogs.length = 0; 
   
   lastStatusLogTime = Date.now();
@@ -181,7 +167,8 @@ export function startReactorLoop(onUpdate, onCritical) {
   if (reactorState.intervalId) clearInterval(reactorState.intervalId);
   
   reactorState.intervalId = setInterval(() => {
-    updateReactor(0.5); 
+    // Apply Time Dilation (Gravity Mechanic)
+    updateReactor(0.5 * reactorState.timeScale); 
   }, 500);
 }
 
@@ -196,7 +183,6 @@ export function updateReactor(deltaTime) {
     handleShiftSuccess();
     return reactorState;
   }
-  // ---------------------------
 
   updateDriftRates(deltaTime);
   
@@ -237,8 +223,27 @@ export function updateReactor(deltaTime) {
 }
 
 // ==========================================
-// 6. CONTROL & HAZARD LOGIC
+// 5. MECHANICS: GRAVITY, HAZARDS, CONTROLS
 // ==========================================
+
+export function setGravityMode(mode) {
+  if (mode === 'HYPER') {
+    reactorState.timeScale = 5.0; 
+    logSignificantEvent("GRAVITY INVERTED: HYPER-G");
+  } else if (mode === 'ZERO') {
+    reactorState.timeScale = 0.2; 
+    logSignificantEvent("GRAVITY INVERTED: ZERO-G");
+  } else {
+    reactorState.timeScale = 1.0; 
+    logSignificantEvent("GRAVITY NORMALIZED");
+  }
+  triggerUpdate();
+}
+
+export function setTimeScale(scale) {
+    reactorState.timeScale = scale;
+    triggerUpdate();
+}
 
 export function togglePause(shouldPause) {
   reactorState.isPaused = shouldPause;
@@ -361,7 +366,7 @@ function triggerRandomHazard() {
 export function triggerTrenchLightning() {
   hazardState.trenchLightning = true;
   logSignificantEvent("TRENCH LIGHTNING");
-  playHazardSound();
+  console.log("AUDIO: Hazard sound triggered");
   activeHazardTimers.push(setTimeout(() => { hazardState.trenchLightning = false; triggerUpdate(); }, 2000));
   triggerUpdate();
 }
@@ -369,7 +374,7 @@ export function triggerTrenchLightning() {
 export function triggerHeavyCurrent() {
   hazardState.heavyCurrent = true;
   logSignificantEvent("HEAVY CURRENT");
-  playHazardSound();
+  console.log("AUDIO: Hazard sound triggered");
   activeHazardTimers.push(setTimeout(() => { hazardState.heavyCurrent = false; triggerUpdate(); }, Math.floor(Math.random() * 4000) + 8000));
   triggerUpdate();
 }
@@ -377,7 +382,7 @@ export function triggerHeavyCurrent() {
 export function triggerDeepSeaEntity() {
   hazardState.deepSeaEntity = true;
   logSignificantEvent("DEEP-SEA ENTITY");
-  playHazardSound();
+  console.log("AUDIO: Hazard sound triggered");
   activeHazardTimers.push(setTimeout(() => { hazardState.deepSeaEntity = false; triggerUpdate(); }, Math.floor(Math.random() * 2000) + 4000));
   triggerUpdate();
 }
@@ -386,7 +391,7 @@ export function triggerSliderJam() {
   if (hazardState.jammedSlider !== null) return;
   hazardState.jammedSlider = Math.floor(Math.random() * 3);
   logSignificantEvent("SLIDER JAMMED");
-  playMetalCreak();
+  console.log("AUDIO: Metal creak triggered");
   activeHazardTimers.push(setTimeout(() => { 
     hazardState.jammedSlider = null; 
     logSignificantEvent("SLIDER UNJAMMED"); 
@@ -408,7 +413,7 @@ export function triggerEmergencyPurge() {
   reactorState.containment = 20;
   reactorState.hullIntegrity = Math.max(0, reactorState.hullIntegrity - 15);
   logSignificantEvent("EMERGENCY PURGE ACTIVATED");
-  playMetalCreak();
+  console.log("AUDIO: Metal creak triggered");
   resetCriticalTimers();
   showPurgeButton = false;
   triggerUpdate();
@@ -452,3 +457,12 @@ export function updateControlAlignment(controlType, isAligned) {
     logSignificantEvent("DRIFT SPIKE");
   }
 }
+
+// AUDIO HOOKS (Exported for consistency)
+export function playHazardSound() { console.log("AUDIO: Hazard sound triggered"); }
+export function playLowPowerHum() { console.log("AUDIO: Low power hum triggered"); }
+export function playMetalCreak() { console.log("AUDIO: Metal creak triggered"); }
+export function playSuccessChime() { console.log("AUDIO: Success chime triggered"); }
+export function playImplosionSound() { console.log("AUDIO: IMPLOSION sound triggered"); }
+export function playLowFrequencyAlarm() { console.log("AUDIO: Low Frequency Alarm"); }
+export function playStaticNoise() { console.log("AUDIO: Static Noise Loop"); }
