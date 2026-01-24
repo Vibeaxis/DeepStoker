@@ -7,7 +7,7 @@ import ShiftEnd from '@/components/ShiftEnd';
 import { loadCareer, saveCareer, addCredits, recordShift, updateHullIntegrity } from '@/utils/CareerProfile';
 import { initializeReactor, calculateDepthCredits } from '@/utils/ReactorLogic';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
-
+import { motion, AnimatePresence } from 'framer-motion';
 function App() {
  const [currentScreen, setCurrentScreen] = useState('title');
   const [career, setCareer] = useState(null);
