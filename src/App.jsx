@@ -8,6 +8,20 @@ import { loadCareer, saveCareer, addCredits, recordShift, updateHullIntegrity } 
 import { initializeReactor, calculateDepthCredits } from '@/utils/ReactorLogic';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+
+
+// Add this helper function outside the App component
+const loadSettings = () => {
+  const saved = localStorage.getItem('deep-stoker-settings');
+  return saved ? JSON.parse(saved) : {
+    enableAudio: true,
+    shakeIntensity: 50,
+    masterVolume: 0.7
+  };
+};
+
+
+
 function App() {
  const [currentScreen, setCurrentScreen] = useState('title');
   const [career, setCareer] = useState(null);
