@@ -441,14 +441,10 @@ export function startReactorLoop(onUpdate, onCritical) {
     clearInterval(reactorState.intervalId);
   }
   
+  // Keep it simple: just call the update. 
+  // Don't check for success here, do it inside the update logic.
   reactorState.intervalId = setInterval(() => {
-    // Check if shift is complete before updating
-    if (reactorState.elapsedTime >= reactorState.shiftDuration) {
-      handleShiftSuccess();
-      return;
-    }
-    
-    updateReactor(0.5); // Progress by 0.5 seconds
+    updateReactor(0.5); 
   }, 500);
 }
 
@@ -469,16 +465,16 @@ function triggerUpdate() {
 }
 
 export function updateReactor(deltaTime) {
-  if (!reactorState.isActive) return reactorState;
-  
-  // Pause Logic: If paused, skip updates but keep interval running
-  if (reactorState.isPaused) {
-    return reactorState;
-  }
-  
+  if (!reactorState.isActive || reactorState.isPaused) return reactorState;
+
   reactorState.survivalTime += deltaTime;
   reactorState.elapsedTime += deltaTime;
-  
+
+  // NEW: Precise Shift End Check
+  if (reactorState.elapsedTime >= reactorState.shiftDuration) {
+    handleShiftSuccess(); // Call your success function here
+    return reactorState;
+  }
   updateDriftRates(deltaTime);
   
   const timeMultiplier = 1 + (reactorState.survivalTime / 300);
