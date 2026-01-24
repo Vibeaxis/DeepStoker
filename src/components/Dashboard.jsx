@@ -5,6 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import EmergencyPurgeButton from './EmergencyPurgeButton';
 import StructuralStabilityMeter from './StructuralStabilityMeter';
 import CornerCracks from './CornerCracks';
+// MAKE SURE THIS FILE EXISTS
 import PauseButton from './PauseButton';
 import CRTStaticOverlay from './CRTStaticOverlay';
 import { Button } from '@/components/ui/button';
@@ -20,9 +21,7 @@ import {
   logSignificantEvent
 } from '@/utils/ReactorLogic';
 
-// ---------------------------------------------------------
-// AUDIO HOOK (Keep this outside component)
-// ---------------------------------------------------------
+// Audio Hook
 const useReactorAudio = (avgDanger, isActive, isPaused) => {
   const audioCtxRef = useRef(null);
   const oscRef = useRef(null);
@@ -45,7 +44,7 @@ const useReactorAudio = (avgDanger, isActive, isPaused) => {
     const gain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
 
-    osc.type = 'sine'; // Deep submarine thrum
+    osc.type = 'sine';
     filter.type = 'lowpass';
     filter.frequency.value = 200; 
     gain.gain.value = 0.15; 
@@ -70,19 +69,14 @@ const useReactorAudio = (avgDanger, isActive, isPaused) => {
     if (!audioCtxRef.current || !oscRef.current) return;
     const ctx = audioCtxRef.current;
     
-    // Pitch modulation based on danger
     const targetFreq = 60 + (avgDanger * 1.5); 
     oscRef.current.frequency.setTargetAtTime(targetFreq, ctx.currentTime, 0.1);
 
     const targetVol = 0.15 + (avgDanger > 80 ? 0.1 : 0);
     gainRef.current.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1);
-    
   }, [avgDanger]);
 };
 
-// ---------------------------------------------------------
-// DASHBOARD COMPONENT
-// ---------------------------------------------------------
 export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
   const initialState = getReactorState(); 
 
@@ -107,8 +101,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
   });
   
   const avgDanger = (state.temperature + state.pressure + state.containment) / 3;
-  
-  // Connect Audio
   useReactorAudio(avgDanger, true, state.isPaused);
 
   const [timeRemaining, setTimeRemaining] = useState(initialState.shiftDuration || 300);
@@ -116,24 +108,20 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
   const [coolantValue, setCoolantValue] = useState([50]);
   const [magneticsValue, setMagneticsValue] = useState([50]);
   const [resumeFlicker, setResumeFlicker] = useState(false);
-  
   const [fogLevel, setFogLevel] = useState(0);
 
   const shiftTimerRef = useRef(null);
   const logContainerRef = useRef(null);
 
-  // Reinforced Glass Calculation
   const reinforcedGlassCount = career.upgrades.filter(u => u === 'Reinforced Glass').length;
   const distortionReduction = Math.min(0.8, reinforcedGlassCount * 0.3);
 
-  // Auto-scroll logs
   useEffect(() => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
   }, [state.recentLogs]);
 
-  // Main Game Loop
   useEffect(() => {
     startReactorLoop(
       (fullState) => {
@@ -143,7 +131,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
         }
       },
       (criticalEvent) => {
-        // Handle Meltdown/Implosion
         triggerShiftEnd(false, criticalEvent?.type || 'MELTDOWN');
       }
     );
@@ -169,7 +156,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
     };
   }, []);
 
-  // Fog Logic
   useEffect(() => {
     if (state.isPaused) return;
     const fogInterval = setInterval(() => {
@@ -178,12 +164,9 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
     return () => clearInterval(fogInterval);
   }, [state.isPaused]);
 
-  // --- HANDLERS ---
-
   const triggerShiftEnd = (success, disasterType = null) => {
     stopReactorLoop();
     if (shiftTimerRef.current) clearInterval(shiftTimerRef.current);
-    
     const finalState = getReactorState();
     onShiftEnd({
       success,
@@ -203,7 +186,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
     setTimeout(() => setResumeFlicker(false), 500);
   };
   
-  // NEW: Abort Logic
   const handleAbortShift = () => {
       triggerShiftEnd(false, 'ABORTED');
   };
@@ -234,14 +216,10 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
     }
   };
 
-  // --- VISUAL HELPERS ---
-
   const isHullCritical = state.hullIntegrity < 25;
   const anyCritical = state.temperature > 85 || state.pressure > 85 || state.containment > 85;
-  
   const rawBlur = ((state.temperature - 40) / 60) * 8;
   const blurAmount = Math.max(0, rawBlur * (1 - distortionReduction));
-  
   const rawHue = ((state.temperature - 40) / 60) * 30;
   const hueRotate = Math.max(0, rawHue * (1 - distortionReduction));
   
@@ -272,21 +250,16 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
       </Helmet>
 
-      <CRTStaticOverlay isPaused={state.isPaused} />
-      
-      {/* --- NEW PAUSE MENU OVERLAY --- */}
+      {/* FIXED: Z-INDEX BOOSTED TO 200 TO SIT ABOVE EVERYTHING */}
       {state.isPaused && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center">
-            {/* Darker backdrop for menu legibility */}
+        <div className="fixed inset-0 z-[200] flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            
             <motion.div 
                initial={{ scale: 0.9, opacity: 0 }}
                animate={{ scale: 1, opacity: 1 }}
-               className="relative z-[100] bg-black border-2 border-emerald-500 p-8 w-80 text-center shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+               className="relative z-[210] bg-black border-2 border-emerald-500 p-8 w-80 text-center shadow-[0_0_30px_rgba(16,185,129,0.3)]"
             >
                 <h2 className="text-3xl font-black text-emerald-400 mb-8 font-orbitron tracking-tighter">SYSTEM PAUSED</h2>
-                
                 <div className="flex flex-col gap-4">
                     <button 
                         onClick={handleResume}
@@ -294,14 +267,12 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                     >
                         Resume Shift
                     </button>
-                    
                     <button 
                         onClick={() => onOpenSettings()} 
                         className="w-full py-3 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-950 uppercase tracking-widest transition-colors text-sm font-bold"
                     >
                         System Config
                     </button>
-                    
                     <button 
                         onClick={handleAbortShift}
                         className="w-full py-3 border border-red-900/50 text-red-500 hover:bg-red-950/30 uppercase tracking-widest transition-colors text-xs font-bold mt-4"
@@ -313,6 +284,8 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
         </div>
       )}
 
+      <CRTStaticOverlay isPaused={state.isPaused} />
+      
       {resumeFlicker && <div className="fixed inset-0 z-[100] bg-white pointer-events-none animate-flash"></div>}
       
       <motion.div 
@@ -323,7 +296,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
           fontFamily: "'Space Mono', monospace"
         }}
       >
-        
         {state.hazardState.trenchLightning && !state.isPaused && (
           <div className="absolute inset-0 z-50 animate-flash pointer-events-none" />
         )}
@@ -359,16 +331,12 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
           />
         )}
         
-        {/* === HEADER SECTION === */}
         <div className="flex-none h-auto px-2 py-1 bg-black/60 backdrop-blur-md border-b border-emerald-500/30 relative z-20">
           <div className="flex flex-row items-center justify-between gap-2 max-w-7xl mx-auto w-full">
-            
             <PauseButton onPause={handlePause} className="flex-none" />
-
             <div className="flex-1 max-w-md mx-2">
               <StructuralStabilityMeter integrity={state.hullIntegrity} />
             </div>
-
             <div className="flex-none text-right flex items-center gap-2">
                <div className="hidden md:block text-[10px] font-bold text-emerald-400 font-orbitron tracking-widest">
                   {career.currentRank}
@@ -380,7 +348,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
           </div>
         </div>
 
-        {/* Side Pods (Left/Right) - Visual only */}
         <div className="absolute top-1/2 -translate-y-1/2 left-4 hidden lg:block z-30 pointer-events-none">
           <div className="bg-zinc-950/90 border-2 border-cyan-500/50 p-3 space-y-3 w-48 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
             <div className="text-[10px] text-cyan-400 font-black border-b border-cyan-500/30 pb-1">NAV_TELEMETRY</div>
@@ -415,7 +382,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
           </div>
         </div>
 
-        {/* Fog Overlay */}
         <AnimatePresence>
           {fogLevel > 1 && (
             <motion.div
@@ -439,10 +405,8 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
           )}
         </AnimatePresence>
 
-        {/* === REACTOR ZONE === */}
         <div className="flex-1 w-full relative z-20 flex flex-col items-center justify-center p-2">
           
-          {/* LOG CONSOLE */}
           <div className="absolute top-4 left-4 z-50 w-72 pointer-events-none hidden md:block">
             <div className="bg-black/80 backdrop-blur-xl border-l-4 border-emerald-500 p-3 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
               <div className="text-[10px] text-emerald-500 font-black mb-2 tracking-[0.2em] uppercase border-b border-emerald-500/20 pb-1">
@@ -459,7 +423,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
             </div>
           </div>
 
-          {/* === REACTOR CONTAINER === */}
           <div className={`relative transition-transform duration-500 ${state.hazardState.heavyCurrent ? 'animate-sway' : ''}`}>
             
             {state.hazardState.deepSeaEntity && (
@@ -468,7 +431,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
             
             <div className="relative z-20 flex items-center justify-center">
               
-              {/* Emergency Button */}
               <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-50">
                   <EmergencyPurgeButton 
                     show={state.showPurgeButton} 
@@ -476,11 +438,7 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                   />
               </div>
 
-              {/* === CONDITIONAL RENDERING: STAR vs CIRCLE === */}
               {state.reactorType === 'star' ? (
-                // ==========================
-                // OPTION A: THE STAR REACTOR
-                // ==========================
                 <div className="relative flex items-center justify-center" style={{ width: '40vh', height: '40vh' }}>
                    <motion.svg 
                       viewBox="0 0 100 100" 
@@ -546,10 +504,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                 </div>
 
               ) : (
-                
-                // ==========================
-                // OPTION B: THE CIRCLE REACTOR
-                // ==========================
                 <motion.div
                   className={`reactor-core relative flex items-center justify-center ${getCoreColor()}`}
                   animate={!state.isPaused ? {
@@ -595,7 +549,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
           </div>
         </div>
         
-        {/* === CONTROL DOCK === */}
         <div className={`flex-none w-full bg-black/40 border-t border-emerald-500/30 backdrop-blur-md px-2 pb-6 pt-2 z-50`}>
           <div className="flex flex-col items-center mb-6 z-50">
             <div className="bg-black/60 backdrop-blur-md p-3 border-2 border-blue-500/30 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.2)]">
@@ -610,7 +563,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                     />
                   </div>
                 </div>
-                
                 <Button
                   onClick={handleWipe}
                   className={`h-12 px-6 font-black text-xs transition-all ${
@@ -667,9 +619,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
   );
 }
 
-// ---------------------------------------------------------
-// HELPER COMPONENTS
-// ---------------------------------------------------------
 function ControlSlider({ label, value, onChange, currentValue, driftMultiplier, color, isJammed, isGlitch, optimalRange, isPaused }) {
   const [inSweetSpot, setInSweetSpot] = useState(false);
   const [flashPenalty, setFlashPenalty] = useState(false);
