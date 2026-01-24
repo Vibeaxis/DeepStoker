@@ -470,15 +470,7 @@ function triggerUpdate() {
 
 export function updateReactor(deltaTime) {
   if (!reactorState.isActive) return reactorState;
-  // 1. Update time
-  reactorState.elapsedTime += deltaTime;
-
-  // 2. CHECK FOR SHIFT END
-  if (reactorState.elapsedTime >= reactorState.shiftDuration) {
-    reactorState.elapsedTime = reactorState.shiftDuration; // Snap to max
-    handleShiftSuccess(); // Kill the loop and trigger summary
-    return;
-  }
+  
   // Pause Logic: If paused, skip updates but keep interval running
   if (reactorState.isPaused) {
     return reactorState;
