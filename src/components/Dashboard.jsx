@@ -16,7 +16,8 @@ import {
   playSuccessChime,
   triggerEmergencyPurge,
   playLowFrequencyAlarm,
-  togglePause
+  togglePause,
+  logSignificantEvent
 } from '@/utils/ReactorLogic';
 import { Button } from '@/components/ui/button';
 // ---------------------------------------------------------

@@ -63,57 +63,69 @@ const handleUpdateSettings = (key, value) => {
   setCurrentScreen('shift');
 };
 
- const handleShiftEnd = (data) => {
-   // 1. SANITIZE INPUT IMMEDIATELY
-   // If data is missing, create a safe default structure
-   const safeData = data || { success: false, survivalTime: 0 };
-   
-   // 2. NORMALIZE FINAL STATE
-   // Handle the case where data exists but .finalState is missing (common in crashes)
-   // We default to safeData itself, or an empty object if that fails
-   const finalState = safeData.finalState || safeData || {};
-   
-   // 3. SAFE PROPERTY ACCESS (Use Nullish Coalescing ??)
-   const temp = finalState.temperature ?? 0;
-   const press = finalState.pressure ?? 0;
-   const cont = finalState.containment ?? 0;
+const handleShiftEnd = (data) => {
+    console.log("Shift End Data Received:", data); // Debugging line
 
-   const avgDanger = (temp + press + cont) / 3;
+    // 1. DEFENSIVE CODING: Ensure we have an object to work with
+    const safeData = data || {};
+    
+    // 2. NORMALIZE FINAL STATE
+    // If finalState is missing, try to use safeData itself, or fallback to empty object
+    const finalState = safeData.finalState || safeData || {};
+    
+    // 3. SAFE EXTRACTION (The Crash Fix)
+    // Use '?? 0' so if pressure is undefined, it becomes 0 instead of crashing
+    const temp = finalState.temperature ?? 0;
+    const press = finalState.pressure ?? 0;
+    const cont = finalState.containment ?? 0;
+    const hull = finalState.hullIntegrity ?? 0;
+
+    // 4. CALCULATE LOGIC
+    const avgDanger = (temp + press + cont) / 3;
     
     let multiplier = 1.0;
     if (avgDanger < 50) multiplier = 2.0;
     else if (avgDanger < 70) multiplier = 1.5;
     else if (avgDanger < 85) multiplier = 1.2;
     
-    // FIX: Use safeData, not data
+    // Check success safely
     if (!safeData.success) multiplier = 0.5;
 
+    // Check multiplier safely
     const shiftMultiplier = finalState.difficultyMult || 1.0;
 
-    // FIX: Use safeData, not data (and ensure survivalTime is a number)
+    // Check survival time safely
     const survivalTime = safeData.survivalTime || 0;
+
     const baseCredits = Math.floor(survivalTime / 5);
-    
     const totalCredits = Math.floor(baseCredits * multiplier * shiftMultiplier);
 
+    // 5. SAVE TO CAREER
     const currentCareer = loadCareer();
-    
-    // FIX: Use safeData
     recordShift(currentCareer, safeData.success, survivalTime, totalCredits);
     
-    // FIX: Use safeData
-    if (safeData.success && finalState.hullIntegrity !== undefined) {
-      updateHullIntegrity(currentCareer, finalState.hullIntegrity);
+    // Only update hull if we actually have data, otherwise assume 100 or current
+    if (safeData.success) {
+      updateHullIntegrity(currentCareer, hull);
     } else {
-      updateHullIntegrity(currentCareer, 100); 
+      // On failure, maybe force a penalty or keep as is. 
+      // Safest is to just use what's in finalState or default to 0.
+      updateHullIntegrity(currentCareer, hull); 
     }
     
     const updatedCareer = loadCareer();
     setCareer(updatedCareer);
 
+    // 6. UPDATE UI STATE
     setShiftData({
-      ...safeData, // FIX: Spread the safe object, not the potentially null 'data'
-      finalState,  // This guarantees ShiftEnd.js gets the object it needs
+      ...safeData,
+      finalState: {
+        temperature: temp,
+        pressure: press,
+        containment: cont,
+        hullIntegrity: hull,
+        difficultyMult: shiftMultiplier
+      },
       creditsEarned: totalCredits
     });
 
