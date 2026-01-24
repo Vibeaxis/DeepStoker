@@ -384,6 +384,32 @@ export function updateControlAlignment(controlType, isAligned) {
   }
 }
 
+
+
+
+function handleShiftSuccess() {
+  // 1. Kill the timer immediately
+  if (reactorState.intervalId) {
+    clearInterval(reactorState.intervalId);
+    reactorState.intervalId = null;
+  }
+
+  // 2. Mark the shift as inactive
+  reactorState.isActive = false;
+
+  // 3. Log it for the event feed
+  logSignificantEvent("REACTOR STABILIZED: SHIFT COMPLETE");
+
+  // 4. Tell the App.jsx that we won
+  if (callbacks.onUpdate) {
+    callbacks.onUpdate({ 
+      ...reactorState, 
+      hazardState, 
+      isComplete: true, // This flag tells ShiftEnd to trigger
+      success: true 
+    });
+  }
+}
 // --- Updated Main Loop Logic ---
 
 export function initializeReactor(rank = 'Novice', upgrades = [], initialHullIntegrity = 100, config = {}) {
@@ -574,11 +600,14 @@ export function calculateDepthCredits() {
   const baseCredits = 100;
   const avgDanger = (reactorState.temperature + reactorState.pressure + reactorState.containment) / 3;
   
-  let multiplier = 1.0;
-  if (avgDanger < 50) multiplier = 2.0; 
-  else if (avgDanger < 70) multiplier = 1.5; 
-  else if (avgDanger < 85) multiplier = 1.0; 
-  else multiplier = 0.5;
+  // NEW: Pull the multiplier from the shift selection (1.0x, 1.5x, 3.0x)
+  const shiftMult = reactorState.difficultyMult || 1.0;
+  
+  let dangerMult = 1.0;
+  if (avgDanger < 50) dangerMult = 2.0; 
+  else if (avgDanger < 70) dangerMult = 1.5; 
+  else if (avgDanger < 85) dangerMult = 1.0; 
+  else dangerMult = 0.5;
   
   const rankBonuses = { 
     'Novice': 1.0, 
@@ -589,15 +618,20 @@ export function calculateDepthCredits() {
     'Abyssal Architect': 1.5
   };
   const rankBonus = rankBonuses[reactorState.rank] || 1.0;
-  const survivalBonus = Math.floor(reactorState.survivalTime / 10);
   
-  const totalCredits = Math.floor((baseCredits * multiplier * rankBonus) + survivalBonus);
+  // We keep the survival bonus but scale it based on the shift intensity
+  const survivalBonus = Math.floor(reactorState.survivalTime / 5);
+  
+  // NEW MATH: Base * Danger * Rank * Shift Intensity + Survival
+  const totalCredits = Math.floor((baseCredits * dangerMult * rankBonus * shiftMult) + survivalBonus);
   
   return {
     baseCredits,
-    multiplier,
+    dangerMult,
     rankBonus,
+    shiftMult, // Include this so the summary screen can show it
     survivalBonus,
     totalCredits
   };
 }
+
