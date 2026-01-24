@@ -7,7 +7,28 @@ import ShiftEnd from '@/components/ShiftEnd';
 import { loadCareer, saveCareer, addCredits, recordShift, updateHullIntegrity } from '@/utils/CareerProfile';
 import { initializeReactor, calculateDepthCredits } from '@/utils/ReactorLogic';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
-
+// The Title Screen Component
+if (currentScreen === 'title') {
+  return (
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-black font-orbitron">
+      {/* Background Animated SVG Reactor Core */}
+      <div className="opacity-30 blur-sm absolute inset-0 flex items-center justify-center">
+         <CircleCore color="#10b981" /> 
+      </div>
+      
+      <h1 className="text-7xl font-black text-emerald-500 mb-12 tracking-tighter">DEEP STOKER</h1>
+      
+      <div className="flex flex-col gap-4 z-10">
+        <Button onClick={() => setCurrentScreen('career')} className="w-64 h-12 bg-emerald-600 hover:bg-emerald-500 font-bold">
+          ENTER SYSTEM
+        </Button>
+        <Button onClick={() => setShowSettings(true)} className="w-64 h-12 border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10">
+          CONFIGURATION
+        </Button>
+      </div>
+    </div>
+  );
+}
 function App() {
  const [currentScreen, setCurrentScreen] = useState('title');
   const [career, setCareer] = useState(null);
@@ -132,26 +153,5 @@ const [settings, setSettings] = useState(loadSettings());
     </AuthProvider>
   );
 }
-// The Title Screen Component
-if (currentScreen === 'title') {
-  return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-black font-orbitron">
-      {/* Background Animated SVG Reactor Core */}
-      <div className="opacity-30 blur-sm absolute inset-0 flex items-center justify-center">
-         <CircleCore color="#10b981" /> 
-      </div>
-      
-      <h1 className="text-7xl font-black text-emerald-500 mb-12 tracking-tighter">DEEP STOKER</h1>
-      
-      <div className="flex flex-col gap-4 z-10">
-        <Button onClick={() => setCurrentScreen('career')} className="w-64 h-12 bg-emerald-600 hover:bg-emerald-500 font-bold">
-          ENTER SYSTEM
-        </Button>
-        <Button onClick={() => setShowSettings(true)} className="w-64 h-12 border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10">
-          CONFIGURATION
-        </Button>
-      </div>
-    </div>
-  );
-}
+
 export default App;
