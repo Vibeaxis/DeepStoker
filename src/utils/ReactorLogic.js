@@ -2,28 +2,25 @@
 // Core reactor simulation engine
 import { RANKS } from './CareerProfile';
 
-// Helper for the System Log feed
-function logSignificantEvent(message) {
-  const timestamp = new Date().toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' });
-  recentLogs.unshift({ id: Date.now(), timestamp, message });
-  if (recentLogs.length > 10) recentLogs.pop();
-}
 
-// The Success Kill-Switch
 function handleShiftSuccess() {
+  // 1. Safety check: make sure the loop is actually killed
   if (reactorState.intervalId) {
     clearInterval(reactorState.intervalId);
     reactorState.intervalId = null;
   }
+  
   reactorState.isActive = false;
 
-  // Now this will work because the helper is defined above
+  // 2. Log the event (using your existing exported function)
   logSignificantEvent("REACTOR STABILIZED: SHIFT COMPLETE");
 
-  if (callbacks.onUpdate) {
+  // 3. Hand off the FINAL state to the App
+  if (callbacks && callbacks.onUpdate) {
     callbacks.onUpdate({ 
       ...reactorState, 
-      hazardState, 
+      // Ensure we include the hazard state so the final danger level is accurate
+      hazardState: typeof hazardState !== 'undefined' ? hazardState : {}, 
       isComplete: true, 
       success: true 
     });
