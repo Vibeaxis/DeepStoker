@@ -10,27 +10,43 @@ export const RANKS = [
   { name: "Abyssal Architect", minCredits: 15000, maxCredits: Infinity }
 ];
 
-const UPGRADES = {
+export const UPGRADES = {
+  'Reinforced Glass': {
+    cost: 150,
+    description: 'Reduces visual distortion during hazards (Stacks)',
+    maxStack: 3
+  },
   'Hardened Seals': {
     cost: 50,
-    description: 'Reduces Pressure drift by 20%'
+    description: 'Reduces Pressure drift by 20%',
+    maxStack: 1
   },
   'Super-Coolant': {
     cost: 75,
-    description: 'Reduces Temperature drift by 20%'
+    description: 'Reduces Temperature drift by 20%',
+    maxStack: 1
   },
   'Magnetics Stabilizer': {
     cost: 100,
-    description: 'Reduces Containment drift by 20%'
+    description: 'Reduces Containment drift by 20%',
+    maxStack: 1
   },
-  'Reinforced Glass': {
-    cost: 150,
-    description: 'Reduces visual distortion during hazards (Stacks)'
-  },
-  "Level 2 Clearance": {
+  'Level 2 Clearance': {
     cost: 500,
-    description: "Unlocks the Binary Star Reactor. Higher thermal drift but 2x credit base.",
-    levelUnlock: true
+    description: 'Unlocks the Binary Star Reactor. Higher thermal drift but 2x credit base.',
+    maxStack: 1
+  },
+  'Level 3 Clearance': {
+    cost: 1200,
+    description: 'Unlocks the Prism Core. Extremely unstable geometry. 3x credit base.',
+    maxStack: 1,
+    required: 'Level 2 Clearance' // Logic to enforce order
+  },
+  'Level 4 Clearance': {
+    cost: 3000,
+    description: 'Unlocks the Singularity. The ultimate test of endurance. 5x credit base.',
+    maxStack: 1,
+    required: 'Level 3 Clearance'
   }
 };
 

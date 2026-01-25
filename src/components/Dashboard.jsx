@@ -545,14 +545,15 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                            <stop offset="100%" stopColor="#7f1d1d" />
                         </radialGradient>
                       </defs>
-                      <polygon 
-                         points="50,5 63,38 98,38 69,59 79,93 50,75 21,93 31,59 2,38 37,38"
-                         fill={`url(#star${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
-                         stroke="white"
-                         strokeWidth="1"
-                         strokeOpacity="0.6"
-                         strokeLinejoin="round"
-                      />
+                   <polygon 
+   // These coordinates are mathematically symmetrical for a 5-point star in a 100x100 box
+   points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35"
+   fill={`url(#star...)`}
+   stroke="white"
+   strokeWidth="1.5"      // Thicker stroke handles corners better
+   strokeLinejoin="round" // <--- CRITICAL: Rounds off the sharp, pixelated tips
+   strokeOpacity="0.8"
+/>
                    </motion.svg>
                    
                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30" style={{ fontFamily: "'Orbitron', sans-serif" }}>
