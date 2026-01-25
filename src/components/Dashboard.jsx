@@ -20,6 +20,86 @@ import {
   logSignificantEvent
 } from '@/utils/ReactorLogic';
 
+// === RESTORED CSS STYLES (THE GLOWING SPHERE) ===
+const REACTOR_CORE_STYLES = `
+  .reactor-core {
+    width: 22vh !important; 
+    height: 22vh !important;
+    border-radius: 50%;
+    position: relative;
+    z-index: 20;
+    transition: transform 0.3s ease;
+  }
+  
+  .reactor-core.blue {
+    background: radial-gradient(circle, #3b82f6 0%, #1e40af 50%, #1e3a8a 100%);
+    box-shadow: 
+      0 0 30px rgba(59, 130, 246, 0.6),
+      0 0 60px rgba(59, 130, 246, 0.4),
+      0 0 90px rgba(59, 130, 246, 0.2),
+      inset 0 0 30px rgba(147, 197, 253, 0.3);
+  }
+  
+  .reactor-core.orange {
+    background: radial-gradient(circle, #f59e0b 0%, #d97706 50%, #b45309 100%);
+    box-shadow: 
+      0 0 30px rgba(245, 158, 11, 0.6),
+      0 0 60px rgba(245, 158, 11, 0.4),
+      0 0 90px rgba(245, 158, 11, 0.2),
+      inset 0 0 30px rgba(253, 186, 116, 0.3);
+  }
+  
+  .reactor-core.red {
+    background: radial-gradient(circle, #ef4444 0%, #dc2626 50%, #991b1b 100%);
+    box-shadow: 
+      0 0 45px rgba(239, 68, 68, 0.8),
+      0 0 75px rgba(239, 68, 68, 0.6),
+      0 0 105px rgba(239, 68, 68, 0.4),
+      inset 0 0 30px rgba(252, 165, 165, 0.4);
+  }
+  
+  .water-ripple {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(10, 95, 127, 0.3) 50%, transparent 100%);
+    animation: ripple 4s ease-in-out infinite;
+  }
+
+  .water-ripple.tragedy {
+     background: radial-gradient(ellipse at center, transparent 0%, rgba(50, 20, 20, 0.6) 50%, transparent 100%);
+     animation-duration: 3s; 
+  }
+  
+  @keyframes ripple {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.1); opacity: 0.5; }
+  }
+  
+  .entity-shadow {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 22vh; 
+    height: 15vh;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.9) 0%, transparent 70%);
+    z-index: 10;
+    transform: translateY(-50%);
+  }
+  
+  .crack-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0 L100 100 M200 0 L0 300' stroke='rgba(255,255,255,0.1)' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    z-index: 40;
+    mix-blend-mode: overlay;
+  }
+
+  .paused-animation, .paused-animation * {
+    animation-play-state: paused !important;
+  }
+`;
+
 // Audio Hook
 const useReactorAudio = (avgDanger, isActive, isPaused) => {
   const audioCtxRef = useRef(null);
@@ -121,7 +201,12 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
     }
   }, [state.recentLogs]);
 
+  // INJECT STYLES AND START LOOP
   useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = REACTOR_CORE_STYLES;
+    document.head.appendChild(styleElement);
+
     startReactorLoop(
       (fullState) => {
         setState(prev => ({ ...fullState }));
@@ -152,6 +237,7 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
     return () => {
       stopReactorLoop();
       if (shiftTimerRef.current) clearInterval(shiftTimerRef.current);
+      document.head.removeChild(styleElement);
     };
   }, []);
 
@@ -594,64 +680,44 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
               ) : (
                 
                 // ==========================
-                // OPTION D: THE SPHERE (LEVEL 1 - RESTORED)
+                // OPTION D: THE SPHERE (RESTORED CSS VERSION)
                 // ==========================
-                <div className="relative flex items-center justify-center" style={{ width: '40vh', height: '40vh' }}>
-                   {/* 1. Outer Containment Ring (Spinning) */}
-                   <motion.div 
-                      className={`absolute inset-0 rounded-full border-2 border-dashed ${getCoreColor() === 'blue' ? 'border-blue-500/30' : getCoreColor() === 'orange' ? 'border-orange-500/30' : 'border-red-500/30'}`}
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 30, ease: "linear", repeat: Infinity }}
-                   />
-
-                   {/* 2. The Core SVG (3D Gradient) */}
-                   <motion.svg 
-                      viewBox="0 0 100 100" 
-                      className="absolute inset-0 w-full h-full"
-                      style={{ 
-                        filter: `drop-shadow(0 0 20px ${getCoreColor() === 'blue' ? '#3b82f6' : getCoreColor() === 'orange' ? '#f59e0b' : '#ef4444'})` 
-                      }}
-                      animate={{ 
-                         scale: !state.isPaused && avgDanger > 85 ? [1, 1.05, 1] : 1
-                      }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                   >
-                      <defs>
-                        <radialGradient id="sphereBlue" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-                           <stop offset="0%" stopColor="#60a5fa" stopOpacity="1" />
-                           <stop offset="100%" stopColor="#1e3a8a" stopOpacity="1" />
-                        </radialGradient>
-                        <radialGradient id="sphereOrange" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-                           <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
-                           <stop offset="100%" stopColor="#7c2d12" stopOpacity="1" />
-                        </radialGradient>
-                        <radialGradient id="sphereRed" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-                           <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
-                           <stop offset="100%" stopColor="#7f1d1d" stopOpacity="1" />
-                        </radialGradient>
-                      </defs>
-                      <circle 
-                         cx="50" cy="50" r="45" 
-                         fill={`url(#sphere${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
-                      />
-                   </motion.svg>
-                   
-                   {/* 3. Text Overlay */}
-                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30 pt-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                <motion.div
+                  className={`reactor-core ${getCoreColor()}`}
+                  animate={!state.isPaused ? {
+                    scale: avgDanger > 85 ? [1, 1.05, 1] : [1, 1.02, 1],
+                    opacity: [0.9, 1, 0.9]
+                  } : {}}
+                  transition={{
+                    duration: avgDanger > 85 ? 0.5 : avgDanger > 60 ? 1 : 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                       <div 
-                        className={`text-5xl font-black mb-0 leading-none ${state.hazardState.trenchLightning ? 'animate-glitch' : ''}`}
-                        style={{ textShadow: '0 0 10px rgba(0,0,0,0.5)' }}
+                        className={`text-5xl font-black mb-0 leading-none ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
+                        style={{ textShadow: '0 0 10px rgba(0,0,0,0.8), -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000' }}
                       >
                         {Math.round(avgDanger)}
                       </div>
                       <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.2em]">STATUS</div>
-                      <div className="flex gap-2 mt-1 opacity-80">
-                         <span className="text-[10px] font-bold">T:{Math.round(state.temperature)}</span>
-                         <span className="text-[10px] font-bold">P:{Math.round(state.pressure)}</span>
-                         <span className="text-[10px] font-bold">C:{Math.round(state.containment)}</span>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                          <span className="opacity-60 w-3 text-right">T</span>
+                          <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.temperature)}°</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                          <span className="opacity-60 w-3 text-right">P</span>
+                          <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.pressure)}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
+                          <span className="opacity-60 w-3 text-right">C</span>
+                          <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.containment)}%</span>
+                        </div>
                       </div>
-                   </div>
-                </div>
+                    </div>
+                </motion.div>
               )}
             </div>
           </div>
