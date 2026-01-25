@@ -438,7 +438,7 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                   />
               </div>
 
-             {/* === CONDITIONAL RENDERING: PRISM vs STAR vs CIRCLE === */}
+           {/* === CONDITIONAL RENDERING: PRISM vs STAR vs SINGULARITY vs CIRCLE === */}
               {state.reactorType === 'prism' ? (
                 // ==========================
                 // OPTION A: THE PRISM (LEVEL 3)
@@ -448,17 +448,15 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                       viewBox="0 0 100 100" 
                       className="absolute inset-0 w-full h-full"
                       style={{ 
-                        // Radioactive Glow
                         filter: `drop-shadow(0 0 30px ${getCoreColor() === 'blue' ? '#8b5cf6' : getCoreColor() === 'orange' ? '#d946ef' : '#ef4444'})` 
                       }}
                       animate={{ 
-                         // Anti-spin (Counter Clockwise) feels unstable
                          rotate: !state.isPaused ? -360 : 0, 
                          scale: !state.isPaused && avgDanger > 85 ? [1, 1.2, 1] : 1
                       }}
                       transition={{ 
-                         rotate: { duration: 15, ease: "linear", repeat: Infinity }, // Faster spin
-                         scale: { duration: 0.3, repeat: Infinity } // Rapid pulsing
+                         rotate: { duration: 15, ease: "linear", repeat: Infinity }, 
+                         scale: { duration: 0.3, repeat: Infinity } 
                       }}
                    >
                       <defs>
@@ -475,8 +473,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                            <stop offset="100%" stopColor="#831843" />
                         </radialGradient>
                       </defs>
-                      
-                      {/* INVERTED TRIANGLE */}
                       <polygon 
                          points="50,90 90,20 10,20" 
                          fill={`url(#prism${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
@@ -487,13 +483,11 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                       />
                    </motion.svg>
                    
-                   {/* TEXT OVERLAY */}
                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30 pt-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                       <div className={`text-5xl font-black mb-0 leading-none ${state.hazardState.trenchLightning ? 'animate-glitch' : ''}`}>
                         {Math.round(avgDanger)}
                       </div>
                       <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.2em]">PRISM CORE</div>
-                      
                       <div className="flex flex-col items-center gap-1">
                          <div className="flex items-center gap-2 text-[12px] font-bold">
                            <span className="opacity-60 w-3 text-right">T</span>
@@ -545,18 +539,18 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                            <stop offset="100%" stopColor="#7f1d1d" />
                         </radialGradient>
                       </defs>
-                   <polygon 
-   // These coordinates are mathematically symmetrical for a 5-point star in a 100x100 box
-   points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35"
-   fill={`url(#star...)`}
-   stroke="white"
-   strokeWidth="1.5"      // Thicker stroke handles corners better
-   strokeLinejoin="round" // <--- CRITICAL: Rounds off the sharp, pixelated tips
-   strokeOpacity="0.8"
-/>
+                      <polygon 
+                         points="50,5 63,38 98,38 69,59 79,93 50,75 21,93 31,59 2,38 37,38"
+                         fill={`url(#star${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
+                         stroke="white"
+                         strokeWidth="2"       
+                         strokeOpacity="0.8"
+                         strokeLinejoin="round"
+                         strokeLinecap="round"
+                      />
                    </motion.svg>
                    
-                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30 pt-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                       <div 
                         className={`text-5xl font-black mb-0 leading-none ${state.hazardState.trenchLightning && !state.isPaused ? 'animate-glitch' : ''}`}
                         style={{ textShadow: '0 0 15px rgba(0,0,0,0.8), 2px 2px 0 #000' }}
@@ -579,6 +573,65 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                         </div>
                       </div>
                    </div>
+                </div>
+
+              ) : state.reactorType === 'singularity' ? (
+                // ==========================
+                // OPTION D: THE SINGULARITY (LEVEL 4)
+                // ==========================
+                <div className="relative flex items-center justify-center" style={{ width: '40vh', height: '40vh' }}>
+                     {/* The Accretion Disk (Spinning White-Hot Ring) */}
+                     <motion.div
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: 'conic-gradient(from 0deg, transparent 0%, #ffffff 50%, transparent 100%)',
+                          filter: 'blur(8px) drop-shadow(0 0 20px white)',
+                          opacity: 0.8
+                        }}
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, ease: "linear", repeat: Infinity }}
+                     />
+                     
+                     {/* The Event Horizon (Pure Black Hole) */}
+                     <motion.div 
+                        className="absolute bg-black rounded-full z-10"
+                        style={{ 
+                          width: '65%', 
+                          height: '65%',
+                          boxShadow: 'inset 0 0 40px #000' // Inner shadow for depth
+                        }}
+                        animate={{ 
+                           scale: avgDanger > 90 ? [1, 0.95, 1] : 1 // It IMPLODES (shrinks) instead of expanding
+                        }}
+                        transition={{ duration: 0.2, repeat: Infinity }}
+                     />
+                     
+                     {/* Particle Distortion Field (Outer Ring) */}
+                     <motion.div
+                        className="absolute inset-0 border-4 border-dotted border-white/20 rounded-full"
+                        animate={{ rotate: -360, scale: [1, 1.1, 1] }}
+                        transition={{ 
+                          rotate: { duration: 20, ease: "linear", repeat: Infinity },
+                          scale: { duration: 3, repeat: Infinity }
+                        }}
+                     />
+                     
+                     {/* TEXT OVERLAY (Minimalist for Level 4) */}
+                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30 pt-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                        <div className="text-6xl font-black mb-0 leading-none" style={{ textShadow: '0 0 20px white' }}>
+                          {Math.round(avgDanger)}
+                        </div>
+                        <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.5em] text-red-500 animate-pulse">
+                           SINGULARITY
+                        </div>
+                        
+                        {/* Stats - Compact Row */}
+                        <div className="flex gap-4 text-[10px] font-bold opacity-80">
+                           <span className={state.temperature > 85 ? 'text-red-500' : 'text-white'}>T:{Math.round(state.temperature)}</span>
+                           <span className={state.pressure > 85 ? 'text-red-500' : 'text-white'}>P:{Math.round(state.pressure)}</span>
+                           <span className={state.containment > 85 ? 'text-red-500' : 'text-white'}>C:{Math.round(state.containment)}</span>
+                        </div>
+                     </div>
                 </div>
 
               ) : (

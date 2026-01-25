@@ -233,3 +233,22 @@ export function getUpgradeStatus(career, upgradeType) {
     isStackable
   };
 }
+// Append this to the bottom of src/utils/CareerProfile.js
+
+export function addCredits(career, credits) {
+  career.totalDepthCredits += credits;
+  career.totalCredits += credits;
+  
+  // Recalculate rank based on new total
+  const rankInfo = getRankFromCredits(career.totalCredits);
+  const oldRank = career.currentRank;
+  
+  career.currentRank = rankInfo.name;
+  career.rankTier = rankInfo.tier;
+  
+  if (detectPromotion(oldRank, career.currentRank)) {
+    career.lastPromotionRank = oldRank;
+  }
+  
+  saveCareer(career);
+}
