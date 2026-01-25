@@ -1,14 +1,55 @@
 
 const STORAGE_KEY = 'deep_stoker_career';
 
+// Make sure RANKS is defined somewhere in this file, likely at the top
+// If you don't have RANKS exported, paste this array too:
 export const RANKS = [
-  { name: "Novice", minCredits: 0, maxCredits: 500 },
-  { name: "Technician", minCredits: 500, maxCredits: 1500 },
-  { name: "Engineer", minCredits: 1500, maxCredits: 4000 },
-  { name: "Master", minCredits: 4000, maxCredits: 8000 },
-  { name: "Overseer", minCredits: 8000, maxCredits: 15000 },
-  { name: "Abyssal Architect", minCredits: 15000, maxCredits: Infinity }
+  { name: 'Novice', threshold: 0, tier: 1 },
+  { name: 'Technician', threshold: 1000, tier: 2 },
+  { name: 'Engineer', threshold: 2500, tier: 2 },
+  { name: 'Master', threshold: 5000, tier: 3 },
+  { name: 'Overseer', threshold: 10000, tier: 3 },
+  { name: 'Abyssal Architect', threshold: 25000, tier: 4 }
 ];
+
+// === ADD THIS FUNCTION ===
+export function calculateRankProgress(totalCredits) {
+  // 1. Find the current rank index based on total credits
+  let currentRankIndex = 0;
+  
+  // Iterate backwards to find the highest rank we qualify for
+  for (let i = RANKS.length - 1; i >= 0; i--) {
+    if (totalCredits >= RANKS[i].threshold) {
+      currentRankIndex = i;
+      break;
+    }
+  }
+
+  const currentRank = RANKS[currentRankIndex];
+  const nextRank = RANKS[currentRankIndex + 1];
+
+  // 2. Handle Max Rank (No next rank)
+  if (!nextRank) {
+    return { 
+      next: null, 
+      creditsToNext: 0, 
+      progress: 100 
+    };
+  }
+
+  // 3. Calculate Progress Percentage
+  const creditsNeededForLevel = nextRank.threshold - currentRank.threshold;
+  const creditsEarnedInLevel = totalCredits - currentRank.threshold;
+  
+  // Clamp between 0 and 100
+  const progress = Math.min(100, Math.max(0, (creditsEarnedInLevel / creditsNeededForLevel) * 100));
+
+  return {
+    next: nextRank.name,
+    creditsToNext: nextRank.threshold - totalCredits,
+    progress: progress
+  };
+}
 
 export const UPGRADES = {
   'Reinforced Glass': {
