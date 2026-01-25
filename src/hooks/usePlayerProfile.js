@@ -7,8 +7,6 @@ const generateDeviceId = () => {
 };
 
 export function usePlayerProfile() {
-  // 1. INITIALIZE FROM LOCAL STORAGE IMMEDIATELY
-  // This prevents the "Novice" flash and protects your data if the network fails.
   const localCareer = loadCareer();
   
   const [profile, setProfile] = useState({
@@ -17,7 +15,7 @@ export function usePlayerProfile() {
     survival_time: localCareer.totalSurvivalTime || 0,
     total_credits: localCareer.totalCredits || 0,
     current_rank: localCareer.currentRank || 'Novice',
-    loading: true // Keep loading true strictly for network sync status
+    loading: true
   });
 
   useEffect(() => {
@@ -25,49 +23,41 @@ export function usePlayerProfile() {
       let career = loadCareer();
       let deviceId = career.device_id;
 
-      // 1. Ensure Device ID exists
       if (!deviceId) {
         deviceId = generateDeviceId();
         career.device_id = deviceId;
         saveCareer(career);
-        // Update local state immediately
         setProfile(prev => ({ ...prev, device_id: deviceId }));
       }
 
       try {
-        // 2. Try to fetch remote data
+        // 1. Check if record exists
         const { data, error } = await supabase
           .from('deep_stoker_records')
           .select('*')
           .eq('device_id', deviceId)
-          .single();
+          .maybeSingle(); // Safer than .single()
 
         if (data) {
-          // REMOTE EXISTS:
-          // We usually trust LOCAL for 'active' progress, but we can sync here.
-          // For now, let's trust LOCAL data for rank/credits as authoritative 
-          // (since you just played), but update the DB to match us.
-          
+          // === RECORD EXISTS: UPDATE IT ===
           const payload = {
-            device_id: deviceId,
             callsign: career.playerName,
             survival_time: Math.max(data.survival_time, career.totalSurvivalTime),
             total_credits: Math.max(data.total_credits, career.totalCredits),
-            current_rank: career.currentRank, // Local rank is king
+            current_rank: career.currentRank,
             updated_at: new Date().toISOString()
           };
 
-          // Silent background sync
-          await supabase.from('deep_stoker_records').upsert(payload);
+          // Explicit UPDATE (Fixes 409/400 errors)
+          await supabase
+            .from('deep_stoker_records')
+            .update(payload)
+            .eq('device_id', deviceId);
           
-          setProfile({
-            ...payload,
-            loading: false
-          });
+          setProfile({ ...payload, device_id: deviceId, loading: false });
 
-        } else if (error && error.code === 'PGRST116') {
-          // RECORD MISSING (PGRST116): Create it safely using UPSERT
-          // Upsert prevents 409 errors if two requests happen at once
+        } else {
+          // === RECORD MISSING: INSERT IT ===
           const newProfile = {
             device_id: deviceId,
             callsign: career.playerName || 'Anonymous',
@@ -76,24 +66,21 @@ export function usePlayerProfile() {
             current_rank: career.currentRank || 'Novice'
           };
 
-          const { error: upsertError } = await supabase
+          // Explicit INSERT
+          const { error: insertError } = await supabase
             .from('deep_stoker_records')
-            .upsert(newProfile, { onConflict: 'device_id' });
+            .insert([newProfile]);
 
-          if (upsertError) console.error('Sync error:', upsertError);
+          if (insertError) {
+             console.error('Insert failed:', insertError);
+             // If insert fails (maybe race condition), just trust local data
+          }
           
           setProfile({ ...newProfile, loading: false });
-        
-        } else {
-          // GENERIC NETWORK ERROR (406, 500, etc)
-          // DO NOT RESET PROFILE. Just keep using local data.
-          console.warn('Network issue fetching profile, sticking to local data:', error);
-          setProfile(prev => ({ ...prev, loading: false }));
         }
 
       } catch (err) {
-        console.error('Critical profile error:', err);
-        // Fallback: Ensure UI is at least usable with local data
+        console.warn('Network offline or DB error. Playing offline.', err);
         setProfile(prev => ({ ...prev, loading: false }));
       }
     };
