@@ -505,7 +505,7 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                    </div>
                 </div>
 
-              ) : state.reactorType === 'star' ? (
+      ) : state.reactorType === 'star' ? (
                 // ==========================
                 // OPTION B: THE STAR (LEVEL 2)
                 // ==========================
@@ -540,13 +540,14 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                         </radialGradient>
                       </defs>
                       <polygon 
-                         points="50,5 63,38 98,38 69,59 79,93 50,75 21,93 31,59 2,38 37,38"
+                         // NEW COORDINATES: Sharper tips, tighter inner radius
+                         points="50,2 61,35 98,35 68,55 79,90 50,70 21,90 32,55 2,35 39,35"
                          fill={`url(#star${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
                          stroke="white"
-                         strokeWidth="2"       
-                         strokeOpacity="0.8"
-                         strokeLinejoin="round"
-                         strokeLinecap="round"
+                         strokeWidth="1.5"      
+                         strokeOpacity="0.9"
+                         strokeLinejoin="miter" /* Sharp corners */
+                         strokeMiterlimit="10"  /* Prevents tips from being cut off */
                       />
                    </motion.svg>
                    
