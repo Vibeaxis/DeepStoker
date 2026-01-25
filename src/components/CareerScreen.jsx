@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getAllUpgrades, getUpgradeStatus, purchaseUpgrade, getRankProgress, saveCareer, calculateRankProgress } from '@/utils/CareerProfile';
+import { getAllUpgrades, getUpgradeStatus, purchaseUpgrade, getRankProgress, saveCareer, calculateRankProgress, UPGRADES } from '@/utils/CareerProfile';
 import { useToast } from '@/components/ui/use-toast';
 import { Award, TrendingUp, Clock, CheckCircle, Lock, ShoppingCart, Globe, Edit2, Check, Star } from 'lucide-react';
 import NetworkLeaderboard from './NetworkLeaderboard';
