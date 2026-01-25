@@ -5,7 +5,6 @@ import { Slider } from '@/components/ui/slider';
 import EmergencyPurgeButton from './EmergencyPurgeButton';
 import StructuralStabilityMeter from './StructuralStabilityMeter';
 import CornerCracks from './CornerCracks';
-// MAKE SURE THIS FILE EXISTS
 import PauseButton from './PauseButton';
 import CRTStaticOverlay from './CRTStaticOverlay';
 import { Button } from '@/components/ui/button';
@@ -488,26 +487,17 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                         {Math.round(avgDanger)}
                       </div>
                       <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.2em]">PRISM CORE</div>
-                      <div className="flex flex-col items-center gap-1">
-                         <div className="flex items-center gap-2 text-[12px] font-bold">
-                           <span className="opacity-60 w-3 text-right">T</span>
-                           <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.temperature)}°</span>
-                         </div>
-                         <div className="flex items-center gap-2 text-[12px] font-bold">
-                           <span className="opacity-60 w-3 text-right">P</span>
-                           <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.pressure)}</span>
-                         </div>
-                         <div className="flex items-center gap-2 text-[12px] font-bold">
-                           <span className="opacity-60 w-3 text-right">C</span>
-                           <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.containment)}%</span>
-                         </div>
+                      <div className="flex gap-2 mt-2 opacity-80">
+                         <span className="text-[10px] font-bold">T:{Math.round(state.temperature)}</span>
+                         <span className="text-[10px] font-bold">P:{Math.round(state.pressure)}</span>
+                         <span className="text-[10px] font-bold">C:{Math.round(state.containment)}</span>
                       </div>
                    </div>
                 </div>
 
-      ) : state.reactorType === 'star' ? (
+              ) : state.reactorType === 'star' ? (
                 // ==========================
-                // OPTION B: THE STAR (LEVEL 2)
+                // OPTION B: THE STAR (LEVEL 2 - SHARP)
                 // ==========================
                 <div className="relative flex items-center justify-center" style={{ width: '40vh', height: '40vh' }}>
                    <motion.svg 
@@ -540,14 +530,14 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                         </radialGradient>
                       </defs>
                       <polygon 
-                         // NEW COORDINATES: Sharper tips, tighter inner radius
+                         // FIXED SHARP STAR COORDINATES
                          points="50,2 61,35 98,35 68,55 79,90 50,70 21,90 32,55 2,35 39,35"
                          fill={`url(#star${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
                          stroke="white"
-                         strokeWidth="1.5"      
+                         strokeWidth="1.5"
                          strokeOpacity="0.9"
-                         strokeLinejoin="miter" /* Sharp corners */
-                         strokeMiterlimit="10"  /* Prevents tips from being cut off */
+                         strokeLinejoin="miter" 
+                         strokeMiterlimit="10" 
                       />
                    </motion.svg>
                    
@@ -559,29 +549,19 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                         {Math.round(avgDanger)}
                       </div>
                       <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.2em]">STATUS</div>
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                          <span className="opacity-60 w-3 text-right">T</span>
-                          <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.temperature)}°</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                          <span className="opacity-60 w-3 text-right">P</span>
-                          <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.pressure)}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[12px] font-bold" style={{ textShadow: '1px 1px 2px #000' }}>
-                          <span className="opacity-60 w-3 text-right">C</span>
-                          <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.containment)}%</span>
-                        </div>
+                      <div className="flex gap-2 mt-1 opacity-80">
+                         <span className="text-[10px] font-bold">T:{Math.round(state.temperature)}</span>
+                         <span className="text-[10px] font-bold">P:{Math.round(state.pressure)}</span>
+                         <span className="text-[10px] font-bold">C:{Math.round(state.containment)}</span>
                       </div>
                    </div>
                 </div>
 
               ) : state.reactorType === 'singularity' ? (
                 // ==========================
-                // OPTION D: THE SINGULARITY (LEVEL 4)
+                // OPTION C: THE SINGULARITY (LEVEL 4)
                 // ==========================
                 <div className="relative flex items-center justify-center" style={{ width: '40vh', height: '40vh' }}>
-                     {/* The Accretion Disk (Spinning White-Hot Ring) */}
                      <motion.div
                         className="absolute inset-0 rounded-full"
                         style={{
@@ -592,50 +572,27 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                         animate={{ rotate: 360 }}
                         transition={{ duration: 2, ease: "linear", repeat: Infinity }}
                      />
-                     
-                     {/* The Event Horizon (Pure Black Hole) */}
                      <motion.div 
                         className="absolute bg-black rounded-full z-10"
-                        style={{ 
-                          width: '65%', 
-                          height: '65%',
-                          boxShadow: 'inset 0 0 40px #000' // Inner shadow for depth
-                        }}
-                        animate={{ 
-                           scale: avgDanger > 90 ? [1, 0.95, 1] : 1 // It IMPLODES (shrinks) instead of expanding
-                        }}
+                        style={{ width: '65%', height: '65%', boxShadow: 'inset 0 0 40px #000' }}
+                        animate={{ scale: avgDanger > 90 ? [1, 0.95, 1] : 1 }}
                         transition={{ duration: 0.2, repeat: Infinity }}
                      />
-                     
-                     {/* Particle Distortion Field (Outer Ring) */}
                      <motion.div
                         className="absolute inset-0 border-4 border-dotted border-white/20 rounded-full"
                         animate={{ rotate: -360, scale: [1, 1.1, 1] }}
-                        transition={{ 
-                          rotate: { duration: 20, ease: "linear", repeat: Infinity },
-                          scale: { duration: 3, repeat: Infinity }
-                        }}
+                        transition={{ rotate: { duration: 20, ease: "linear", repeat: Infinity }, scale: { duration: 3, repeat: Infinity } }}
                      />
-                     
-                     {/* TEXT OVERLAY (Minimalist for Level 4) */}
                      <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30 pt-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                         <div className="text-6xl font-black mb-0 leading-none" style={{ textShadow: '0 0 20px white' }}>
                           {Math.round(avgDanger)}
                         </div>
-                        <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.5em] text-red-500 animate-pulse">
-                           SINGULARITY
-                        </div>
-                        
-                        {/* Stats - Compact Row */}
-                        <div className="flex gap-4 text-[10px] font-bold opacity-80">
-                           <span className={state.temperature > 85 ? 'text-red-500' : 'text-white'}>T:{Math.round(state.temperature)}</span>
-                           <span className={state.pressure > 85 ? 'text-red-500' : 'text-white'}>P:{Math.round(state.pressure)}</span>
-                           <span className={state.containment > 85 ? 'text-red-500' : 'text-white'}>C:{Math.round(state.containment)}</span>
-                        </div>
+                        <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.5em] text-red-500 animate-pulse">SINGULARITY</div>
                      </div>
                 </div>
 
               ) : (
+                
                 // ==========================
                 // OPTION D: THE SPHERE (LEVEL 1 - RESTORED)
                 // ==========================
@@ -696,8 +653,6 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                    </div>
                 </div>
               )}
-                </motion.div>
-              
             </div>
           </div>
         </div>
