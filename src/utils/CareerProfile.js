@@ -113,33 +113,33 @@ export function detectPromotion(oldRank, newRank) {
 export function loadCareer() {
   const saved = localStorage.getItem(STORAGE_KEY);
   
-  if (saved) {
-    const parsed = JSON.parse(saved);
-    
-    // Migration: Initialize missing fields
-    if (typeof parsed.totalCredits === 'undefined') {
-      let estimatedLifetime = parsed.totalDepthCredits || 0;
-      if (parsed.upgrades && Array.isArray(parsed.upgrades)) {
-        parsed.upgrades.forEach(u => {
-          if (UPGRADES[u]) estimatedLifetime += UPGRADES[u].cost;
-        });
+  // Defensive check: If saved is the string "undefined" or "null", ignore it
+  if (saved && saved !== "undefined" && saved !== "null") {
+    try {
+      const parsed = JSON.parse(saved);
+      
+      // Migration logic
+      if (typeof parsed.totalCredits === 'undefined') {
+        let estimated = parsed.totalDepthCredits || 0;
+        if (parsed.upgrades) {
+          parsed.upgrades.forEach(u => { if(UPGRADES[u]) estimated += UPGRADES[u].cost; });
+        }
+        parsed.totalCredits = estimated;
       }
-      parsed.totalCredits = estimatedLifetime;
+      
+      const rankInfo = getRankFromCredits(parsed.totalCredits);
+      parsed.currentRank = rankInfo.name;
+      parsed.rankTier = rankInfo.tier;
+      if (typeof parsed.hullIntegrity === 'undefined') parsed.hullIntegrity = 100;
+      
+      return parsed;
+    } catch (e) {
+      console.error("Save file corrupted, resetting career:", e);
+      // Fall through to default return
     }
-    
-    // Validate rank
-    const rankInfo = getRankFromCredits(parsed.totalCredits);
-    parsed.currentRank = rankInfo.name;
-    parsed.rankTier = rankInfo.tier;
-
-    if (typeof parsed.hullIntegrity === 'undefined') {
-      parsed.hullIntegrity = 100;
-    }
-
-    return parsed;
   }
   
-  // Default new career
+  // Default career (returned if no save or save is corrupt)
   return {
     playerName: 'Reactor Technician',
     totalDepthCredits: 0,
