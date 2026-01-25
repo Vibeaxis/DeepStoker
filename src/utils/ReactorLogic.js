@@ -122,6 +122,9 @@ function triggerUpdate() {
 export function initializeReactor(rank = 'Novice', upgrades = [], initialHullIntegrity = 100, config = {}) {
   // 1. Capture the duration passed from App.js (default to 300 if missing)
   const shiftDuration = config.duration || 300;
+  
+  // 2. Capture the type (default to circle)
+  const reactorType = config.reactorType || 'circle';
 
   reactorState = {
     ...reactorState,
@@ -132,7 +135,7 @@ export function initializeReactor(rank = 'Novice', upgrades = [], initialHullInt
     survivalTime: 0,
     elapsedTime: 0,
     shiftDuration: shiftDuration,
-    reactorType: config.reactorType || 'circle',
+    reactorType: reactorType,
     difficultyMult: config.difficultyMult || 1.0,
     timeScale: 1.0,
     isActive: true,
@@ -142,8 +145,21 @@ export function initializeReactor(rank = 'Novice', upgrades = [], initialHullInt
     upgrades
   };
   
-  const baseDrift = reactorState.reactorType === 'star' ? 1.4 : 1.1;
-  driftMultipliers = { temperature: baseDrift, pressure: baseDrift, containment: baseDrift };
+  // --- LEVEL 3 UPDATE: DRIFT LOGIC ---
+  // Circle = 1.1 (Standard)
+  // Star = 1.4 (Hard)
+  // Prism = 1.8 (Very Hard)
+  let baseDrift = 1.1; 
+  if (reactorType === 'star') baseDrift = 1.4;
+  if (reactorType === 'prism') baseDrift = 1.8;
+
+  driftMultipliers = { 
+      temperature: baseDrift, 
+      pressure: baseDrift, 
+      containment: baseDrift 
+  };
+  // -----------------------------------
+  
   controlAlignment = { temperature: false, pressure: false, containment: false };
 
   resetCriticalTimers();

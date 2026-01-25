@@ -438,7 +438,83 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                   />
               </div>
 
-              {state.reactorType === 'star' ? (
+             {/* === CONDITIONAL RENDERING: PRISM vs STAR vs CIRCLE === */}
+              {state.reactorType === 'prism' ? (
+                // ==========================
+                // OPTION A: THE PRISM (LEVEL 3)
+                // ==========================
+                <div className="relative flex items-center justify-center" style={{ width: '38vh', height: '38vh' }}>
+                   <motion.svg 
+                      viewBox="0 0 100 100" 
+                      className="absolute inset-0 w-full h-full"
+                      style={{ 
+                        // Radioactive Glow
+                        filter: `drop-shadow(0 0 30px ${getCoreColor() === 'blue' ? '#8b5cf6' : getCoreColor() === 'orange' ? '#d946ef' : '#ef4444'})` 
+                      }}
+                      animate={{ 
+                         // Anti-spin (Counter Clockwise) feels unstable
+                         rotate: !state.isPaused ? -360 : 0, 
+                         scale: !state.isPaused && avgDanger > 85 ? [1, 1.2, 1] : 1
+                      }}
+                      transition={{ 
+                         rotate: { duration: 15, ease: "linear", repeat: Infinity }, // Faster spin
+                         scale: { duration: 0.3, repeat: Infinity } // Rapid pulsing
+                      }}
+                   >
+                      <defs>
+                        <radialGradient id="prismBlue" cx="50%" cy="50%" r="50%">
+                           <stop offset="0%" stopColor="#a78bfa" /> 
+                           <stop offset="100%" stopColor="#4c1d95" />
+                        </radialGradient>
+                        <radialGradient id="prismOrange" cx="50%" cy="50%" r="50%">
+                           <stop offset="0%" stopColor="#e879f9" />
+                           <stop offset="100%" stopColor="#701a75" />
+                        </radialGradient>
+                        <radialGradient id="prismRed" cx="50%" cy="50%" r="50%">
+                           <stop offset="0%" stopColor="#f472b6" />
+                           <stop offset="100%" stopColor="#831843" />
+                        </radialGradient>
+                      </defs>
+                      
+                      {/* INVERTED TRIANGLE */}
+                      <polygon 
+                         points="50,90 90,20 10,20" 
+                         fill={`url(#prism${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
+                         stroke="white"
+                         strokeWidth="1" 
+                         strokeOpacity="0.8"
+                         strokeLinejoin="round"
+                      />
+                   </motion.svg>
+                   
+                   {/* TEXT OVERLAY */}
+                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-30 pt-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                      <div className={`text-5xl font-black mb-0 leading-none ${state.hazardState.trenchLightning ? 'animate-glitch' : ''}`}>
+                        {Math.round(avgDanger)}
+                      </div>
+                      <div className="text-[9px] font-bold opacity-80 mb-3 tracking-[0.2em]">PRISM CORE</div>
+                      
+                      <div className="flex flex-col items-center gap-1">
+                         <div className="flex items-center gap-2 text-[12px] font-bold">
+                           <span className="opacity-60 w-3 text-right">T</span>
+                           <span className={state.temperature > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.temperature)}°</span>
+                         </div>
+                         <div className="flex items-center gap-2 text-[12px] font-bold">
+                           <span className="opacity-60 w-3 text-right">P</span>
+                           <span className={state.pressure > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.pressure)}</span>
+                         </div>
+                         <div className="flex items-center gap-2 text-[12px] font-bold">
+                           <span className="opacity-60 w-3 text-right">C</span>
+                           <span className={state.containment > 85 ? 'text-red-400' : 'text-emerald-400'}>{Math.round(state.containment)}%</span>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+
+              ) : state.reactorType === 'star' ? (
+                // ==========================
+                // OPTION B: THE STAR (LEVEL 2)
+                // ==========================
                 <div className="relative flex items-center justify-center" style={{ width: '40vh', height: '40vh' }}>
                    <motion.svg 
                       viewBox="0 0 100 100" 
@@ -470,11 +546,12 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                         </radialGradient>
                       </defs>
                       <polygon 
-                         points="50,5 61,35 95,35 67,57 78,91 50,70 22,91 33,57 5,35 39,35"
+                         points="50,5 63,38 98,38 69,59 79,93 50,75 21,93 31,59 2,38 37,38"
                          fill={`url(#star${getCoreColor().charAt(0).toUpperCase() + getCoreColor().slice(1)})`}
                          stroke="white"
-                         strokeWidth="0.5" 
-                         strokeOpacity="0.4"
+                         strokeWidth="1"
+                         strokeOpacity="0.6"
+                         strokeLinejoin="round"
                       />
                    </motion.svg>
                    
@@ -504,6 +581,10 @@ export default function Dashboard({ career, onShiftEnd, onOpenSettings }) {
                 </div>
 
               ) : (
+                
+                // ==========================
+                // OPTION C: THE CIRCLE (LEVEL 1)
+                // ==========================
                 <motion.div
                   className={`reactor-core relative flex items-center justify-center ${getCoreColor()}`}
                   animate={!state.isPaused ? {

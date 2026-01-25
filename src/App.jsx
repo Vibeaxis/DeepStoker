@@ -48,16 +48,20 @@ const handleUpdateSettings = (key, value) => {
   // 2. Define our new Shift/Level logic
   const shiftDurations = { quick: 180, standard: 300, deep: 600 };
   const isLevel2 = currentCareer.upgrades.includes("Level 2 Clearance");
+  const isLevel3 = currentCareer.upgrades.includes("Level 3 Clearance"); // Assume this exists name-wise
 
-  // 3. Update the initialize call to handle the new "Level 2" Star reactor
-  // We pass the shift duration and the reactor type (Star vs Circle)
+// DETERMINE REACTOR TYPE
+  let reactorType = 'circle';
+  if (isLevel3) reactorType = 'prism'; // New Level 3
+  else if (isLevel2) reactorType = 'star';
+
   initializeReactor(
     currentCareer.currentRank, 
     currentCareer.upgrades, 
     currentCareer.hullIntegrity,
     {
       duration: shiftDurations[shiftType],
-      reactorType: isLevel2 ? 'star' : 'circle', // THE LEVEL 2 TOGGLE
+      reactorType: reactorType, 
       difficultyMult: shiftType === 'deep' ? 3.0 : 1.0
     }
   );
