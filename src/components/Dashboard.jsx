@@ -20,11 +20,12 @@ import {
   logSignificantEvent
 } from '@/utils/ReactorLogic';
 
-// === RESTORED CSS STYLES (THE GLOWING SPHERE) ===
+// === RESTORED & UPSCALED CSS STYLES ===
+// I changed 22vh to 38vh here so it isn't tiny
 const REACTOR_CORE_STYLES = `
   .reactor-core {
-    width: 22vh !important; 
-    height: 22vh !important;
+    width: 38vh !important; 
+    height: 38vh !important;
     border-radius: 50%;
     position: relative;
     z-index: 20;
@@ -79,8 +80,8 @@ const REACTOR_CORE_STYLES = `
     position: absolute;
     top: 50%;
     left: 0;
-    width: 22vh; 
-    height: 15vh;
+    width: 38vh; 
+    height: 25vh;
     background: radial-gradient(ellipse, rgba(0,0,0,0.9) 0%, transparent 70%);
     z-index: 10;
     transform: translateY(-50%);
