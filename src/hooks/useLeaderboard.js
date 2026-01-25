@@ -21,7 +21,6 @@ export function useLeaderboard() {
       return data;
     } catch (err) {
       console.error('Fetch leaderboard error:', err);
-      // Don't show toast for this, just fail silently in UI
       return [];
     } finally {
       setLoading(false);
@@ -29,12 +28,11 @@ export function useLeaderboard() {
   };
 
   const syncPlayerData = async (deviceId, currentData) => {
-    // If no deviceId, we can't sync. Silent fail.
     if (!deviceId) return false;
 
     setLoading(true);
     try {
-      // 1. Check if record exists first (Avoids 409/400 errors from upsert)
+      // 1. Check if record exists
       const { data: existing, error: checkError } = await supabase
         .from('deep_stoker_records')
         .select('id, survival_time')
@@ -43,36 +41,44 @@ export function useLeaderboard() {
 
       if (checkError) throw checkError;
 
-      // 2. Prepare Payload
-      const newSurvivalTime = Math.max(existing?.survival_time || 0, currentData.survival_time);
+      // 2. SANITIZE INPUTS (This fixes the 400 Bad Request)
+      // If currentData.total_credits is undefined, force it to 0.
+      const safeCredits = Number.isFinite(currentData.total_credits) ? currentData.total_credits : 0;
+      const safeSurvival = Math.max(
+        existing?.survival_time || 0, 
+        Number.isFinite(currentData.survival_time) ? currentData.survival_time : 0
+      );
       
-      const payload = {
-        device_id: deviceId,
+      // 3. Prepare Base Payload (Data to save)
+      const basePayload = {
         callsign: currentData.callsign || 'Anonymous',
-        survival_time: newSurvivalTime,
-        total_credits: currentData.total_credits,
-        current_rank: currentData.current_rank,
+        survival_time: safeSurvival,
+        total_credits: safeCredits,
+        current_rank: currentData.current_rank || 'Novice',
         updated_at: new Date().toISOString()
       };
 
-      // 3. Update or Insert
+      // 4. Update or Insert
       if (existing) {
+        // UPDATE: Do NOT send 'device_id' in the body (we query BY it, we don't change it)
         const { error: updateError } = await supabase
           .from('deep_stoker_records')
-          .update(payload)
+          .update(basePayload)
           .eq('device_id', deviceId);
+          
         if (updateError) throw updateError;
       } else {
+        // INSERT: MUST include 'device_id' so the DB knows who this is
         const { error: insertError } = await supabase
           .from('deep_stoker_records')
-          .insert([payload]);
+          .insert([{ ...basePayload, device_id: deviceId }]);
+          
         if (insertError) throw insertError;
       }
 
       return true;
     } catch (err) {
-      console.warn('Sync warning (Network may be down):', err.message);
-      // Suppress the toast error so it doesn't annoy the player
+      console.warn('Sync warning:', err.message);
       return false;
     } finally {
       setLoading(false);
